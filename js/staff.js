@@ -1,15 +1,24 @@
 document.addEventListener("DOMContentLoaded", () => {
     console.log("Trang Quản lý nhân viên đã sẵn sàng.");
 
-    // Firebase config
-    const firebaseConfig = { /* Cấu hình Firebase giữ nguyên */ };
+    // Cấu hình Firebase
+    const firebaseConfig = {
+        apiKey: "AIzaSyDV06m47eD90e8n3vTd6B9NmKsEOUz_r_E",
+        authDomain: "foodiee-506f6.firebaseapp.com",
+        projectId: "foodiee-506f6",
+        storageBucket: "foodiee-506f6.appspot.com",
+        messagingSenderId: "628837902932",
+        appId: "1:628837902932:web:fcdfcfca84ad76e700dbc1",
+        measurementId: "G-3ZNLCPWM94",
+        databaseURL: "https://foodiee-506f6-default-rtdb.firebaseio.com"
+    };
 
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
+    const db = firebase.database();
 
     auth.onAuthStateChanged(user => user ? loadStaffData() : (window.location.href = 'login.html'));
 
-    const STAFF_STORAGE_KEY = 'staffData';
     let currentStaffData = [];
     const elements = {
         notification: document.getElementById('notification'),
@@ -22,7 +31,6 @@ document.addEventListener("DOMContentLoaded", () => {
         restoreFile: document.getElementById('restoreFile')
     };
 
-    // Khởi tạo sự kiện
     const initEvents = () => {
         document.getElementById("btnAdd").addEventListener("click", showAddForm);
         document.getElementById("btnCancelAdd").addEventListener("click", hideAddForm);
@@ -37,51 +45,37 @@ document.addEventListener("DOMContentLoaded", () => {
         elements.staffTable.addEventListener('click', handleTableActions);
     };
 
-    // Hiển thị thông báo
     const showNotification = (message, isError = false) => {
         elements.notification.textContent = message;
         elements.notification.className = `notification${isError ? ' error' : ''} show`;
         setTimeout(() => elements.notification.classList.remove('show'), 3000);
     };
 
-    // Xử lý dữ liệu
-    const SERVER_URL = 'http://localhost:3000/staff'; // Đổi nếu deploy online
+    const saveStaffData = async () => {
+        try {
+            await db.ref('staffs').set(currentStaffData);
+            showNotification("Dữ liệu đã được lưu lên Firebase!");
+        } catch (error) {
+            console.error(error);
+            showNotification("Không thể lưu dữ liệu lên Firebase!", true);
+        }
+    };
 
-const saveStaffData = async () => {
-    try {
-        const response = await fetch(SERVER_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(currentStaffData)
-        });
-        if (!response.ok) throw new Error("Lỗi khi lưu dữ liệu lên server.");
-        showNotification("Dữ liệu đã được lưu lên server!");
-    } catch (error) {
-        console.error(error);
-        showNotification("Không thể lưu dữ liệu lên server!", true);
-    }
-};
+    const loadStaffData = async () => {
+        try {
+            const snapshot = await db.ref('staffs').once('value');
+            currentStaffData = snapshot.val() || [];
+            renderStaffTable();
+        } catch (error) {
+            console.error("Lỗi khi tải dữ liệu từ Firebase:", error);
+            showNotification("Không thể tải dữ liệu từ Firebase!", true);
+            currentStaffData = [];
+            renderStaffTable();
+        }
+    };
 
-const loadStaffData = async () => {
-    try {
-        const response = await fetch(SERVER_URL);
-        if (!response.ok) throw new Error("Lỗi khi lấy dữ liệu từ server.");
-        currentStaffData = await response.json();
-        renderStaffTable();
-    } catch (error) {
-        console.error("Lỗi khi tải dữ liệu từ server:", error);
-        showNotification("Không thể tải dữ liệu từ server!", true);
-        currentStaffData = [];
-        renderStaffTable();
-    }
-};
-
-
-    // Render bảng
     const renderStaffTable = (data = currentStaffData) => {
-        elements.staffTable.innerHTML = data.length ? generateTableRows(data) : 
+        elements.staffTable.innerHTML = data.length ? generateTableRows(data) :
             `<tr><td colspan="5" style="text-align: center; padding: 30px;">
                 <i class="fas fa-info-circle"></i> ${data === currentStaffData ? 'Không có nhân viên nào' : 'Không tìm thấy nhân viên phù hợp'}
             </td></tr>`;
@@ -97,20 +91,16 @@ const loadStaffData = async () => {
                 <button class="action-btn edit-btn" data-index="${index}"><i class="fas fa-edit"></i> Sửa</button>
                 <button class="action-btn delete-btn" data-index="${index}"><i class="fas fa-trash"></i> Xóa</button>
             </td>
-        </tr>`
-    ).join('');
+        </tr>`).join('');
 
-    // Xử lý hành động trong bảng
     const handleTableActions = e => {
         const btn = e.target.closest('button');
         if (!btn) return;
-        
         const index = btn.dataset.index;
-        btn.classList.contains('edit-btn') ? editStaff(index) : 
-        btn.classList.contains('delete-btn') && deleteStaff(index);
+        btn.classList.contains('edit-btn') ? editStaff(index) :
+            btn.classList.contains('delete-btn') && deleteStaff(index);
     };
 
-    // Quản lý nhân viên
     const addStaffToLocal = staff => {
         if (currentStaffData.some(s => s.id === staff.id)) {
             showNotification("Mã nhân viên đã tồn tại!", true);
@@ -123,9 +113,9 @@ const loadStaffData = async () => {
     };
 
     const editStaff = index => {
-        const {id, name, phone, position} = currentStaffData[index];
-        ['staffId', 'staffName', 'staffPhone', 'staffPosition'].forEach((id, i) => 
-            document.getElementById(id).value = [id, name, phone, position][i]);
+        const { id, name, phone, position } = currentStaffData[index];
+        ['staffId', 'staffName', 'staffPhone', 'staffPosition'].forEach((idField, i) =>
+            document.getElementById(idField).value = [id, name, phone, position][i]);
         elements.addStaffForm.style.display = 'block';
         elements.formAddStaff.dataset.editIndex = index;
     };
@@ -144,34 +134,32 @@ const loadStaffData = async () => {
         }
     };
 
-    // Bộ lọc
     const filterStaff = () => {
-        const [phone, id, name] = ['filterPhone', 'filterId', 'filterName'].map(id => 
+        const [phone, id, name] = ['filterPhone', 'filterId', 'filterName'].map(id =>
             document.getElementById(id).value.trim().toLowerCase());
-        
-        const filtered = currentStaffData.filter(staff => 
+
+        const filtered = currentStaffData.filter(staff =>
             (!phone || staff.phone?.toLowerCase().includes(phone)) &&
             (!id || staff.id?.toLowerCase().includes(id)) &&
             (!name || staff.name?.toLowerCase().includes(name)));
-        
+
         renderStaffTable(filtered);
         filtered.length === 0 && showNotification("Không tìm thấy nhân viên phù hợp");
     };
 
     const clearFilters = () => {
-        ['filterPhone', 'filterId', 'filterName'].forEach(id => 
+        ['filterPhone', 'filterId', 'filterName'].forEach(id =>
             document.getElementById(id).value = "");
         renderStaffTable();
     };
 
-    // Xuất dữ liệu
     const exportCSV = () => {
         if (!currentStaffData.length) return showNotification("Không có dữ liệu để xuất", true);
-        
+
         const csvContent = "data:text/csv;charset=utf-8,"
             + "Mã nhân viên,Tên nhân viên,Số điện thoại,Chức vụ\n"
             + currentStaffData.map(s => [s.id, s.name, s.phone, s.position].join(",")).join("\n");
-        
+
         const link = document.createElement("a");
         link.href = encodeURI(csvContent);
         link.download = "danh_sach_nhan_vien.csv";
@@ -181,13 +169,12 @@ const loadStaffData = async () => {
         showNotification("Xuất file CSV thành công!");
     };
 
-    // Sao lưu & khôi phục
     const backupData = () => {
-        const dataUri = 'data:application/json;charset=utf-8,' 
+        const dataUri = 'data:application/json;charset=utf-8,'
             + encodeURIComponent(JSON.stringify(currentStaffData));
         const link = document.createElement('a');
         link.href = dataUri;
-        link.download = `staff_backup_${new Date().toISOString().slice(0,10)}.json`;
+        link.download = `staff_backup_${new Date().toISOString().slice(0, 10)}.json`;
         link.click();
         showNotification("Sao lưu dữ liệu thành công!");
     };
@@ -208,7 +195,6 @@ const loadStaffData = async () => {
         reader.readAsText(file);
     };
 
-    // Quản lý form
     const showAddForm = () => {
         elements.formAddStaff.reset();
         delete elements.formAddStaff.dataset.editIndex;
@@ -231,18 +217,15 @@ const loadStaffData = async () => {
             position: document.getElementById("staffPosition").value.trim(),
         };
 
-        // Validate
-        if (Object.values(newStaff).some(v => !v)) 
+        if (Object.values(newStaff).some(v => !v))
             return showNotification("Vui lòng nhập đầy đủ thông tin!", true);
-        if (!/^\d{10,11}$/.test(newStaff.phone)) 
+        if (!/^\d{10,11}$/.test(newStaff.phone))
             return showNotification("Số điện thoại không hợp lệ!", true);
 
-        // Xử lý cập nhật/thêm mới
         const editIndex = elements.formAddStaff.dataset.editIndex;
         editIndex !== undefined ? updateStaff(editIndex, newStaff) : addStaffToLocal(newStaff);
         hideAddForm();
     };
 
-    // Khởi chạy ứng dụng
     initEvents();
 });

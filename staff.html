@@ -8,100 +8,64 @@
     <link rel="stylesheet" href="css/staff.css" />
 </head>
 <body>
+    <!-- Sidebar -->
     <div id="sidebar" class="sidebar">
-        <button id="toggleSidebar" class="toggle-btn">
+        <button id="toggleSidebar" class="toggle-btn" aria-label="Toggle sidebar">
             <i class="fas fa-bars"></i>
         </button>
         <nav class="nav-menu">
             <ul>
-                <li>
-                    <a href="overview.html">
-                        <i class="fas fa-chart-line"></i>
-                        <span class="link-text">Tổng quan</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="staff.html" class="active">
-                        <i class="fas fa-users"></i>
-                        <span class="link-text">Quản lý nhân viên</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="restaurant.html">
-                        <i class="fas fa-utensils"></i>
-                        <span class="link-text">Quản lý nhà hàng</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="warehouse.html">
-                        <i class="fas fa-warehouse"></i>
-                        <span class="link-text">Quản lý kho</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="account.html">
-                        <i class="fas fa-user-cog"></i>
-                        <span class="link-text">Tài khoản</span>
-                    </a>
-                </li>
+                <li><a href="overview.html"><i class="fas fa-chart-line"></i><span class="link-text">Tổng quan</span></a></li>
+                <li><a href="staff.html" class="active"><i class="fas fa-users"></i><span class="link-text">Quản lý nhân viên</span></a></li>
+                <li><a href="restaurant.html"><i class="fas fa-utensils"></i><span class="link-text">Quản lý nhà hàng</span></a></li>
+                <li><a href="warehouse.html"><i class="fas fa-warehouse"></i><span class="link-text">Quản lý kho</span></a></li>
+                <li><a href="account.html"><i class="fas fa-user-cog"></i><span class="link-text">Tài khoản</span></a></li>
             </ul>
         </nav>
     </div>
 
+    <!-- Main content -->
     <div class="content-wrapper">
         <header>
             <h1>Quản lý nhân viên</h1>
             <p>Danh sách và phân quyền nhân viên.</p>
         </header>
 
+        <!-- Sao lưu / khôi phục -->
         <div class="backup-section">
             <h2><i class="fas fa-database"></i> Sao lưu dữ liệu</h2>
-            <p>Dữ liệu được lưu trữ ngay trên máy tính của bạn. Bạn có thể sao lưu hoặc khôi phục dữ liệu.</p>
-            
+            <p>Bạn có thể sao lưu hoặc khôi phục dữ liệu từ máy tính.</p>
             <div class="backup-controls">
-                <button id="btnBackup" class="btn primary">
-                    <i class="fas fa-file-export"></i> Sao lưu dữ liệu
-                </button>
-                <button id="btnRestore" class="btn secondary">
-                    <i class="fas fa-file-import"></i> Khôi phục dữ liệu
-                </button>
+                <button id="btnBackup" class="btn primary"><i class="fas fa-file-export"></i> Sao lưu dữ liệu</button>
+                <button id="btnRestore" class="btn secondary"><i class="fas fa-file-import"></i> Khôi phục dữ liệu</button>
                 <input type="file" id="restoreFile" accept=".json" style="display: none;">
             </div>
         </div>
 
+        <!-- Bộ lọc và hành động -->
         <div class="toolbar">
             <div class="filter-group">
                 <label for="filterId">Mã nhân viên</label>
                 <input type="text" id="filterId" placeholder="Nhập mã nhân viên..." autocomplete="off">
             </div>
-            
             <div class="filter-group">
                 <label for="filterName">Tên nhân viên</label>
                 <input type="text" id="filterName" placeholder="Nhập tên nhân viên..." autocomplete="off">
             </div>
-            
             <div class="filter-group">
                 <label for="filterPhone">Số điện thoại</label>
                 <input type="text" id="filterPhone" placeholder="Nhập số điện thoại..." autocomplete="off">
             </div>
-            
             <div class="action-buttons">
-                <button id="btnFilter" class="btn primary">
-                    <i class="fas fa-filter"></i> Lọc
-                </button>
-                <button id="btnClearFilter" class="btn secondary">
-                    <i class="fas fa-undo"></i> Xóa lọc
-                </button>
-                <button id="btnExport" class="btn primary">
-                    <i class="fas fa-file-export"></i> Xuất CSV
-                </button>
-                <button id="btnAdd" class="btn primary">
-                    <i class="fas fa-plus"></i> Thêm mới
-                </button>
+                <button id="btnFilter" class="btn primary"><i class="fas fa-filter"></i> Lọc</button>
+                <button id="btnClearFilter" class="btn secondary"><i class="fas fa-undo"></i> Xóa lọc</button>
+                <button id="btnExport" class="btn primary"><i class="fas fa-file-export"></i> Xuất CSV</button>
+                <button id="btnAdd" class="btn primary"><i class="fas fa-plus"></i> Thêm mới</button>
             </div>
         </div>
 
-        <section id="addStaffForm">
+        <!-- Form thêm nhân viên -->
+        <section id="addStaffForm" style="display: none;">
             <h2>Thêm mới nhân viên</h2>
             <form id="formAddStaff">
                 <div class="form-row">
@@ -109,37 +73,29 @@
                         <label for="staffId">Mã nhân viên</label>
                         <input type="text" id="staffId" required>
                     </div>
-                    
                     <div class="form-group">
                         <label for="staffName">Tên nhân viên</label>
                         <input type="text" id="staffName" required>
                     </div>
                 </div>
-                
                 <div class="form-row">
                     <div class="form-group">
                         <label for="staffPhone">Số điện thoại</label>
                         <input type="tel" id="staffPhone" required>
                     </div>
-                    
                     <div class="form-group">
                         <label for="staffPosition">Chức vụ</label>
                         <input type="text" id="staffPosition" required>
                     </div>
                 </div>
-                
-                
                 <div class="form-actions">
-                    <button type="submit" class="btn primary">
-                        <i class="fas fa-save"></i> Lưu
-                    </button>
-                    <button type="button" id="btnCancelAdd" class="btn secondary">
-                        <i class="fas fa-times"></i> Hủy
-                    </button>
+                    <button type="submit" class="btn primary"><i class="fas fa-save"></i> Lưu</button>
+                    <button type="button" id="btnCancelAdd" class="btn secondary"><i class="fas fa-times"></i> Hủy</button>
                 </div>
             </form>
         </section>
 
+        <!-- Bảng danh sách nhân viên -->
         <div class="table-container">
             <table id="staffTable">
                 <thead>
@@ -160,18 +116,17 @@
                 </tbody>
             </table>
         </div>
-        
-        
-    </div>
-    
-    <div class="notification" id="notification">
-        Thao tác thành công!
     </div>
 
-    <!-- Firebase SDK chỉ dùng cho xác thực -->
+    <!-- Thông báo -->
+    <div class="notification" id="notification">Thao tác thành công!</div>
+
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    
+
+    <!-- Script xử lý -->
     <script src="js/staff.js"></script>
     <script src="js/home.js"></script>
 </body>
