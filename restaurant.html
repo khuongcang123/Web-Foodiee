@@ -4,40 +4,110 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quản lý nhà hàng - Foodiee</title>
-    <link rel="stylesheet" href="css/home.css">
+    
+    <link rel="stylesheet" href="css/nhahang.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
 </head>
 <body>
-    
-<div id="sidebar" class="sidebar open">
-    <button id="toggleSidebar" class="toggle-btn">
-        <i class="fas fa-bars"></i>
-    </button>
-    <nav class="nav-menu">
-        <ul>
-            <li><a href="overview.html"><i class="fas fa-chart-line"></i><span class="link-text">Tổng quan</span></a></li>
-            <li><a href="staff.html"><i class="fas fa-users"></i><span class="link-text">Quản lý nhân viên</span></a></li>
-            <li><a href="restaurant.html"><i class="fas fa-utensils"></i><span class="link-text">Quản lý nhà hàng</span></a></li>
-            <li><a href="warehouse.html"><i class="fas fa-warehouse"></i><span class="link-text">Quản lý kho</span></a></li>
-            <li><a href="account.html"><i class="fas fa-user-cog"></i><span class="link-text">Tài khoản</span></a></li>
-        </ul>
-    </nav>
+<div id="firebase-loading" class="firebase-loading">
+    <div class="spinner"></div>
+    <p>Đang kết nối với hệ thống...</p>
 </div>
 
-    <main>
-        <h1>Quản lý nhà hàng</h1>
-        <p>Thông tin nhà hàng và chi nhánh.</p>
-    </main>
-    
-<footer>
-    &copy; 2023 Foodiee - Tất cả quyền được bảo lưu
-</footer>
+<div id="app" style="display: none;">
+    <div id="sidebar" class="sidebar open">
+        <button id="toggleSidebar" class="toggle-btn">
+            <i class="fas fa-bars"></i>
+        </button>
+        <nav class="nav-menu">
+            <ul>
+                <li><a href="overview.html"><i class="fas fa-chart-line"></i><span class="link-text">Tổng quan</span></a></li>
+                <li><a href="staff.html"><i class="fas fa-users"></i><span class="link-text">Quản lý nhân viên</span></a></li>
+                <li><a href="restaurant.html" class="active"><i class="fas fa-utensils"></i><span class="link-text">Quản lý nhà hàng</span></a></li>
+                <li><a href="warehouse.html"><i class="fas fa-warehouse"></i><span class="link-text">Quản lý kho</span></a></li>
+                <li><a href="account.html"><i class="fas fa-user-cog"></i><span class="link-text">Tài khoản</span></a></li>
+            </ul>
+        </nav>
+    </div>
 
+    <main>
+        <div class="header">
+            <div>
+                <h1>Quản lý nhà hàng</h1>
+                <p>Thông tin nhà hàng và chi nhánh</p>
+            </div>
+            <div class="current-time">
+                <i class="far fa-clock"></i> <span id="currentDateTime">Thứ Sáu, 6 tháng 6, 2025 10:30 AM</span>
+            </div>
+        </div>
+        
+        <!-- Statistics Section -->
+        <div class="stats-container">
+            <div class="stat-card">
+                <h3>Số khách trong quán</h3>
+                <div class="value" id="customers-in-restaurant">0</div>
+                <div class="info">
+                    <span>Đã phục vụ hôm nay: <span id="customers-served">0</span></span>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <h3>Nhân viên đang làm</h3>
+                <div class="value" id="staff-working">0</div>
+                <div class="info">
+                    <span>Phục vụ: <span id="staff-serving">0</span> | Bếp: <span id="staff-cooking">0</span></span>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <h3>Doanh thu hôm nay</h3>
+                <div class="value" id="revenue-today">0₫</div>
+                <div class="info">
+                    <span>Hóa đơn: <span id="invoices-count">0</span></span>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <h3>Phương thức thanh toán</h3>
+                <div class="payment-methods">
+                    <div class="payment-method">
+                        <i class="fas fa-money-bill-wave"></i> Tiền mặt: <span id="cash-percentage">0%</span>
+                    </div>
+                    <div class="payment-method">
+                        <i class="fas fa-exchange-alt"></i> Chuyển khoản: <span id="transfer-percentage">0%</span>
+                    </div>
+                </div>
+                <div class="info">
+                    <span>Tiền mặt: <span id="cash-amount">0₫</span></span>
+                    <span>Chuyển khoản: <span id="transfer-amount">0₫</span></span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Area Management Section -->
+        <div class="management-header">
+            <h2>Quản lý khu vực & bàn</h2>
+            <button id="btnAddArea" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Thêm khu vực
+            </button>
+        </div>
+        
+        <div class="areas-container" id="areasContainer">
+            <!-- Areas will be dynamically added here -->
+        </div>
+    </main>
+        
     
+</div>
+
 <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
 <script src="js/home.js"></script>
+<script src="js/nhahang.js"></script>
 
 </body>
 </html>

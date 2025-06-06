@@ -101,21 +101,55 @@ document.addEventListener("DOMContentLoaded", () => {
             btn.classList.contains('delete-btn') && deleteStaff(index);
     };
 
-    const addStaffToLocal = staff => {
+    // Hàm tạo tài khoản nhân viên trên Firebase Authentication
+    const createStaffAccount = (email) => {
+        const password = "123456"; // Mật khẩu mặc định
+        return auth.createUserWithEmailAndPassword(email, password)
+            .then((userCredential) => {
+                console.log("Tài khoản nhân viên đã được tạo:", userCredential.user.uid);
+                return true;
+            })
+            .catch((error) => {
+                console.error("Lỗi khi tạo tài khoản:", error);
+                showNotification(`Lỗi tạo tài khoản: ${error.message}`, true);
+                return false;
+            });
+    };
+
+    const addStaffToLocal = async (staff) => {
+        // Kiểm tra định dạng email
+        if (!staff.id.endsWith('@gmail.com')) {
+            showNotification("Mã nhân viên phải có đuôi @gmail.com!", true);
+            return false;
+        }
+        
+        // Kiểm tra trùng mã nhân viên
         if (currentStaffData.some(s => s.id === staff.id)) {
             showNotification("Mã nhân viên đã tồn tại!", true);
             return false;
         }
+        
+        // Tạo tài khoản authentication
+        const accountCreated = await createStaffAccount(staff.id);
+        if (!accountCreated) return false;
+        
+        // Thêm vào danh sách
         currentStaffData.push(staff);
         saveStaffData();
-        showNotification("Thêm nhân viên thành công!");
+        showNotification("Thêm nhân viên thành công và đã tạo tài khoản!");
         return true;
     };
 
     const editStaff = index => {
         const { id, name, phone, position } = currentStaffData[index];
-        ['staffId', 'staffName', 'staffPhone', 'staffPosition'].forEach((idField, i) =>
-            document.getElementById(idField).value = [id, name, phone, position][i]);
+        const idField = document.getElementById("staffId");
+        idField.value = id;
+        idField.readOnly = true; // Không cho phép sửa email
+        
+        document.getElementById("staffName").value = name;
+        document.getElementById("staffPhone").value = phone;
+        document.getElementById("staffPosition").value = position;
+        
         elements.addStaffForm.style.display = 'block';
         elements.formAddStaff.dataset.editIndex = index;
     };
@@ -197,6 +231,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const showAddForm = () => {
         elements.formAddStaff.reset();
+        // Cho phép nhập email khi thêm mới
+        document.getElementById("staffId").readOnly = false; 
         delete elements.formAddStaff.dataset.editIndex;
         elements.addStaffForm.style.display = "block";
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -208,7 +244,7 @@ document.addEventListener("DOMContentLoaded", () => {
         delete elements.formAddStaff.dataset.editIndex;
     };
 
-    const handleStaffSubmit = e => {
+    const handleStaffSubmit = async e => {
         e.preventDefault();
         const newStaff = {
             id: document.getElementById("staffId").value.trim(),
@@ -217,14 +253,25 @@ document.addEventListener("DOMContentLoaded", () => {
             position: document.getElementById("staffPosition").value.trim(),
         };
 
+        // Validate dữ liệu
         if (Object.values(newStaff).some(v => !v))
             return showNotification("Vui lòng nhập đầy đủ thông tin!", true);
+        
         if (!/^\d{10,11}$/.test(newStaff.phone))
             return showNotification("Số điện thoại không hợp lệ!", true);
-
+        
         const editIndex = elements.formAddStaff.dataset.editIndex;
-        editIndex !== undefined ? updateStaff(editIndex, newStaff) : addStaffToLocal(newStaff);
-        hideAddForm();
+        
+        if (editIndex !== undefined) {
+            // Không thay đổi email khi chỉnh sửa
+            newStaff.id = currentStaffData[editIndex].id;
+            updateStaff(editIndex, newStaff);
+            hideAddForm();
+        } else {
+            // Thêm mới - yêu cầu tạo tài khoản
+            const success = await addStaffToLocal(newStaff);
+            success && hideAddForm();
+        }
     };
 
     initEvents();

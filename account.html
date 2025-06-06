@@ -6,6 +6,164 @@
     <title>Tài khoản - Foodiee</title>
     <link rel="stylesheet" href="css/home.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* CSS mới cho trang tài khoản */
+        .account-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .account-card {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .account-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .avatar-container {
+            position: relative;
+            margin-right: 20px;
+        }
+        
+        .avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background-color: #3498db;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .account-info h2 {
+            margin: 0 0 5px;
+            color: #2c3e50;
+        }
+        
+        .account-info p {
+            margin: 0;
+            color: #7f8c8d;
+        }
+        
+        .account-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .detail-item {
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+        }
+        
+        .detail-item h3 {
+            margin: 0 0 10px;
+            font-size: 16px;
+            color: #7f8c8d;
+        }
+        
+        .detail-item p {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 500;
+            color: #2c3e50;
+        }
+        
+        .account-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        
+        .btn-update {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background-color 0.3s;
+        }
+        
+        .btn-update:hover {
+            background-color: #2980b9;
+        }
+        
+        .btn-logout {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background-color 0.3s;
+        }
+        
+        .btn-logout:hover {
+            background-color: #c0392b;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 4px;
+            color: white;
+            font-weight: 500;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transform: translateX(150%);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .notification.error {
+            background-color: #e74c3c;
+        }
+        
+        .notification.success {
+            background-color: #2ecc71;
+        }
+        
+        @media (max-width: 768px) {
+            .account-details {
+                grid-template-columns: 1fr;
+            }
+            
+            .account-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
 </head>
 <body>
     
@@ -19,7 +177,7 @@
             <li><a href="staff.html"><i class="fas fa-users"></i><span class="link-text">Quản lý nhân viên</span></a></li>
             <li><a href="restaurant.html"><i class="fas fa-utensils"></i><span class="link-text">Quản lý nhà hàng</span></a></li>
             <li><a href="warehouse.html"><i class="fas fa-warehouse"></i><span class="link-text">Quản lý kho</span></a></li>
-            <li><a href="account.html"><i class="fas fa-user-cog"></i><span class="link-text">Tài khoản</span></a></li>
+            <li><a href="account.html" class="active"><i class="fas fa-user-cog"></i><span class="link-text">Tài khoản</span></a></li>
         </ul>
     </nav>
 </div>
@@ -27,17 +185,243 @@
     <main>
         <h1>Tài khoản</h1>
         <p>Thông tin tài khoản cá nhân và cài đặt.</p>
+        
+        <div class="account-container">
+            <div class="account-card">
+                <div class="account-header">
+                    <div class="avatar-container">
+                        <div class="avatar" id="userAvatar">U</div>
+                    </div>
+                    <div class="account-info">
+                        <h2 id="userName">Nguyễn Văn A</h2>
+                        <p id="userRole">Quản lý nhà hàng</p>
+                    </div>
+                </div>
+                
+                <div class="account-details">
+                    <div class="detail-item">
+                        <h3><i class="fas fa-envelope"></i> Email</h3>
+                        <p id="userEmail">nguyenvana@example.com</p>
+                    </div>
+                    <div class="detail-item">
+                        <h3><i class="fas fa-phone"></i> Số điện thoại</h3>
+                        <p id="userPhone">0912345678</p>
+                    </div>
+                    <div class="detail-item">
+                        <h3><i class="fas fa-map-marker-alt"></i> Địa chỉ</h3>
+                        <p id="userAddress">123 Đường ABC, Quận XYZ, TP. Hồ Chí Minh</p>
+                    </div>
+                    <div class="detail-item">
+                        <h3><i class="fas fa-calendar-alt"></i> Ngày tham gia</h3>
+                        <p id="joinDate">01/01/2023</p>
+                    </div>
+                </div>
+                
+                <div class="account-actions">
+                    <button id="btnUpdate" class="btn-update">
+                        <i class="fas fa-edit"></i> Cập nhật thông tin
+                    </button>
+                    <button id="btnLogout" class="btn-logout">
+                        <i class="fas fa-sign-out-alt"></i> Đăng xuất
+                    </button>
+                </div>
+            </div>
+        </div>
     </main>
     
 <footer>
     &copy; 2023 Foodiee - Tất cả quyền được bảo lưu
 </footer>
 
+<div class="notification" id="notification">Thao tác thành công!</div>
     
 <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 <script src="js/home.js"></script>
+<script>
+    // account.js
+    document.addEventListener("DOMContentLoaded", () => {
+        console.log("Trang Tài khoản đã sẵn sàng.");
+        
+        // Khai báo các phần tử
+        const elements = {
+            userName: document.getElementById('userName'),
+            userEmail: document.getElementById('userEmail'),
+            userPhone: document.getElementById('userPhone'),
+            userAddress: document.getElementById('userAddress'),
+            userAvatar: document.getElementById('userAvatar'),
+            userRole: document.getElementById('userRole'),
+            joinDate: document.getElementById('joinDate'),
+            btnUpdate: document.getElementById('btnUpdate'),
+            btnLogout: document.getElementById('btnLogout'),
+            notification: document.getElementById('notification')
+        };
+        
+        // Cấu hình Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyDV06m47eD90e8n3vTd6B9NmKsEOUz_r_E",
+            authDomain: "foodiee-506f6.firebaseapp.com",
+            projectId: "foodiee-506f6",
+            storageBucket: "foodiee-506f6.appspot.com",
+            messagingSenderId: "628837902932",
+            appId: "1:628837902932:web:fcdfcfca84ad76e700dbc1",
+            measurementId: "G-3ZNLCPWM94",
+            databaseURL: "https://foodiee-506f6-default-rtdb.firebaseio.com"
+        };
+        
+        // Khởi tạo Firebase nếu chưa có
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.database();
+        
+        // Hiển thị thông báo
+        const showNotification = (message, isError = false) => {
+            elements.notification.textContent = message;
+            elements.notification.className = `notification ${isError ? 'error' : 'success'} show`;
+            setTimeout(() => elements.notification.classList.remove('show'), 3000);
+        };
+        
+        // Lấy thông tin người dùng từ Firebase
+        const loadUserData = async (user) => {
+            try {
+                // Hiển thị thông tin cơ bản từ Auth
+                elements.userEmail.textContent = user.email;
+                elements.userAvatar.textContent = user.email.charAt(0).toUpperCase();
+                
+                // Lấy thông tin bổ sung từ Database
+                const snapshot = await db.ref(`users/${user.uid}`).once('value');
+                const userData = snapshot.val() || {};
+                
+                // Hiển thị thông tin
+                elements.userName.textContent = userData.name || user.email;
+                elements.userPhone.textContent = userData.phone || 'Chưa cập nhật';
+                elements.userAddress.textContent = userData.address || 'Chưa cập nhật';
+                elements.userRole.textContent = userData.role || 'Nhân viên';
+                
+                // Hiển thị ngày tham gia
+                if (user.metadata && user.metadata.creationTime) {
+                    const joinDate = new Date(user.metadata.creationTime);
+                    elements.joinDate.textContent = joinDate.toLocaleDateString('vi-VN');
+                }
+            } catch (error) {
+                console.error("Lỗi khi tải dữ liệu người dùng:", error);
+                showNotification("Không thể tải thông tin tài khoản!", true);
+            }
+        };
+        
+        // Xử lý đăng xuất
+        const handleLogout = () => {
+            auth.signOut().then(() => {
+                window.location.href = 'index.html';
+            }).catch((error) => {
+                console.error("Lỗi khi đăng xuất:", error);
+                showNotification("Đăng xuất thất bại!", true);
+            });
+        };
+        
+        // Hiển thị form cập nhật
+        const showUpdateForm = () => {
+            // Tạo form cập nhật
+            const updateForm = `
+                <div class="update-form">
+                    <h3><i class="fas fa-user-edit"></i> Cập nhật thông tin</h3>
+                    
+                    <div class="form-group">
+                        <label for="updateName">Họ và tên</label>
+                        <input type="text" id="updateName" value="${elements.userName.textContent}">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="updatePhone">Số điện thoại</label>
+                        <input type="tel" id="updatePhone" value="${elements.userPhone.textContent}">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="updateAddress">Địa chỉ</label>
+                        <textarea id="updateAddress" rows="3">${elements.userAddress.textContent}</textarea>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button id="btnSaveUpdate" class="btn primary">
+                            <i class="fas fa-save"></i> Lưu thay đổi
+                        </button>
+                        <button id="btnCancelUpdate" class="btn secondary">
+                            <i class="fas fa-times"></i> Hủy bỏ
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            // Chèn form vào trang
+            const accountCard = document.querySelector('.account-card');
+            accountCard.insertAdjacentHTML('beforeend', updateForm);
+            
+            // Xử lý sự kiện
+            document.getElementById('btnSaveUpdate').addEventListener('click', saveUserData);
+            document.getElementById('btnCancelUpdate').addEventListener('click', () => {
+                document.querySelector('.update-form').remove();
+            });
+        };
+        
+        // Lưu thông tin cập nhật
+        const saveUserData = async () => {
+            const user = auth.currentUser;
+            if (!user) return;
+            
+            const name = document.getElementById('updateName').value.trim();
+            const phone = document.getElementById('updatePhone').value.trim();
+            const address = document.getElementById('updateAddress').value.trim();
+            
+            if (!name) {
+                showNotification("Vui lòng nhập họ và tên", true);
+                return;
+            }
+            
+            if (phone && !/^\d{10,11}$/.test(phone)) {
+                showNotification("Số điện thoại không hợp lệ", true);
+                return;
+            }
+            
+            try {
+                // Lưu dữ liệu vào Firebase
+                await db.ref(`users/${user.uid}`).set({
+                    name,
+                    phone,
+                    address,
+                    email: user.email
+                });
+                
+                // Cập nhật giao diện
+                elements.userName.textContent = name;
+                elements.userPhone.textContent = phone || 'Chưa cập nhật';
+                elements.userAddress.textContent = address || 'Chưa cập nhật';
+                
+                // Xóa form cập nhật
+                document.querySelector('.update-form').remove();
+                
+                showNotification("Cập nhật thông tin thành công!");
+            } catch (error) {
+                console.error("Lỗi khi cập nhật dữ liệu:", error);
+                showNotification("Cập nhật thất bại!", true);
+            }
+        };
+        
+        // Xử lý sự kiện
+        elements.btnLogout.addEventListener('click', handleLogout);
+        elements.btnUpdate.addEventListener('click', showUpdateForm);
+        
+        // Kiểm tra đăng nhập
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                loadUserData(user);
+            } else {
+                window.location.href = 'index.html';
+            }
+        });
+    });
+</script>
 
 </body>
 </html>
