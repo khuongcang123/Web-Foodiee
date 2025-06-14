@@ -4,40 +4,296 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quản lý kho - Foodiee</title>
-    <link rel="stylesheet" href="css/home.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/warehouse.css">
 </head>
 <body>
-    
-<div id="sidebar" class="sidebar open">
-    <button id="toggleSidebar" class="toggle-btn">
-        <i class="fas fa-bars"></i>
-    </button>
-    <nav class="nav-menu">
-        <ul>
-            <li><a href="overview.html"><i class="fas fa-chart-line"></i><span class="link-text">Tổng quan</span></a></li>
-            <li><a href="staff.html"><i class="fas fa-users"></i><span class="link-text">Quản lý nhân viên</span></a></li>
-            <li><a href="restaurant.html"><i class="fas fa-utensils"></i><span class="link-text">Quản lý nhà hàng</span></a></li>
-            <li><a href="warehouse.html"><i class="fas fa-warehouse"></i><span class="link-text">Quản lý kho</span></a></li>
-            <li><a href="account.html"><i class="fas fa-user-cog"></i><span class="link-text">Tài khoản</span></a></li>
-        </ul>
-    </nav>
+<div id="firebase-loading" class="firebase-loading">
+    <div class="spinner"></div>
+    <p>Đang kết nối với hệ thống...</p>
 </div>
 
+<div id="app" style="display: none;">
+    <div id="sidebar" class="sidebar open">
+        <button id="toggleSidebar" class="toggle-btn">
+            <i class="fas fa-bars"></i>
+        </button>
+        <nav class="nav-menu">
+            <ul>
+                <li><a href="overview.html"><i class="fas fa-chart-line"></i><span class="link-text">Tổng quan</span></a></li>
+                <li><a href="staff.html"><i class="fas fa-users"></i><span class="link-text">Quản lý nhân viên</span></a></li>
+                <li><a href="restaurant.html"><i class="fas fa-utensils"></i><span class="link-text">Quản lý nhà hàng</span></a></li>
+                <li><a href="warehouse.html" class="active"><i class="fas fa-warehouse"></i><span class="link-text">Quản lý kho</span></a></li>
+                <li><a href="account.html"><i class="fas fa-user-cog"></i><span class="link-text">Tài khoản</span></a></li>
+            </ul>
+        </nav>
+    </div>
+    
     <main>
-        <h1>Quản lý kho</h1>
-        <p>Quản lý nguyên liệu và hàng tồn kho.</p>
+        <div class="header">
+            <div>
+                <h1>Quản lý kho</h1>
+                <p>Quản lý nguyên liệu và hàng tồn kho</p>
+            </div>
+            <div class="current-time">
+                <i class="far fa-clock"></i> <span id="currentDateTime"></span>
+            </div>
+        </div>
+        
+        <div class="tabs">
+            <div class="tab active" data-tab="menu">Menu</div>
+            <div class="tab" data-tab="inventory">Kho hàng</div>
+        </div>
+        
+        <!-- Menu Tab -->
+        <div class="tab-content active" id="menuTab">
+            <div class="search-container">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="menuSearch" placeholder="Tìm kiếm món...">
+                </div>
+                <button id="btnAddMenuItem" class="btn btn-success">
+                    <i class="fas fa-plus"></i> Thêm món
+                </button>
+            </div>
+            
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Mã món</th>
+                            <th>Hình ảnh</th>
+                            <th>Tên món</th>
+                            <th>Danh mục</th>
+                            <th>Giá</th>
+                            <th>Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody id="menuTableBody">
+                        <!-- Menu items will be populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Inventory Tab -->
+        <div class="tab-content" id="inventoryTab">
+            <div class="search-container">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="inventorySearch" placeholder="Tìm kiếm hàng...">
+                </div>
+                <button id="btnAddInventoryItem" class="btn btn-success">
+                    <i class="fas fa-plus"></i> Thêm hàng
+                </button>
+            </div>
+            
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Mã hàng</th>
+                            <th>Hình ảnh</th>
+                            <th>Tên hàng</th>
+                            <th>Danh mục</th>
+                            <th>Số lượng</th>
+                            <th>Trạng thái</th>
+                            <th>Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inventoryTableBody">
+                        <!-- Inventory items will be populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </main>
     
-<footer>
-    &copy; 2023 Foodiee - Tất cả quyền được bảo lưu
-</footer>
-
     
+</div>
+
+<!-- Menu Item Modal -->
+<div id="menuItemModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="menuModalTitle">Thêm món mới</h2>
+            <button class="close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label for="menuItemName">Tên món</label>
+                <input type="text" id="menuItemName" class="form-control" placeholder="Nhập tên món">
+            </div>
+            
+            <div class="form-group">
+                <label for="menuItemCategory">Danh mục</label>
+                <select id="menuItemCategory" class="select-control">
+                    <option value="food">Đồ ăn</option>
+                    <option value="drink">Đồ uống</option>
+                    <option value="other">Khác</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="menuItemPrice">Giá tiền</label>
+                <input type="number" id="menuItemPrice" class="form-control" placeholder="Nhập giá tiền">
+            </div>
+            
+            <div class="form-group">
+                <label for="menuItemImage">Hình ảnh</label>
+                <div class="image-preview" id="menuImagePreview">
+                    <div class="placeholder">
+                        <i class="fas fa-image" style="font-size: 3rem;"></i>
+                        <p>Chưa có hình ảnh</p>
+                    </div>
+                    <img id="menuItemImagePreview" src="" alt="Preview">
+                </div>
+                <input type="file" id="menuItemImage" accept="image/*">
+            </div>
+            
+            <div class="form-group">
+                <label for="menuItemDescription">Mô tả</label>
+                <textarea id="menuItemDescription" class="form-control" rows="3" placeholder="Mô tả món ăn"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="menuItemRecipe">Công thức</label>
+                <textarea id="menuItemRecipe" class="form-control" rows="5" placeholder="Công thức nấu ăn"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label>Nguyên liệu</label>
+                <div id="ingredientsContainer">
+                    <!-- Ingredients will be added here -->
+                </div>
+                <button id="btnAddIngredient" class="btn btn-primary" style="margin-top: 10px;">
+                    <i class="fas fa-plus"></i> Thêm nguyên liệu
+                </button>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button id="btnCancelMenuItem" class="btn">Hủy bỏ</button>
+            <button id="btnSaveMenuItem" class="btn btn-primary">Lưu món</button>
+        </div>
+    </div>
+</div>
+
+<!-- Inventory Item Modal -->
+<div id="inventoryItemModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="inventoryModalTitle">Thêm hàng mới</h2>
+            <button class="close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label for="inventoryItemName">Tên hàng</label>
+                <input type="text" id="inventoryItemName" class="form-control" placeholder="Nhập tên hàng">
+            </div>
+            
+            <div class="form-group">
+                <label for="inventoryItemCategory">Danh mục</label>
+                <select id="inventoryItemCategory" class="select-control">
+                    <option value="material">Nguyên liệu</option>
+                    <option value="item">Vật phẩm</option>
+                    <option value="tool">Dụng cụ</option>
+                </select>
+            </div>
+            
+            <div class="row">
+                <div class="col">
+                    <div class="form-group">
+                        <label for="inventoryItemQuantity">Số lượng</label>
+                        <input type="number" id="inventoryItemQuantity" class="form-control" placeholder="Nhập số lượng">
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="form-group">
+                        <label for="inventoryItemUnit">Đơn vị</label>
+                        <select id="inventoryItemUnit" class="select-control">
+                            <option value="kg">kg</option>
+                            <option value="g">g</option>
+                            <option value="l">l</option>
+                            <option value="ml">ml</option>
+                            <option value="item">cái</option>
+                            <option value="package">gói</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="inventoryItemImage">Hình ảnh</label>
+                <div class="image-preview" id="inventoryImagePreview">
+                    <div class="placeholder">
+                        <i class="fas fa-image" style="font-size: 3rem;"></i>
+                        <p>Chưa có hình ảnh</p>
+                    </div>
+                    <img id="inventoryItemImagePreview" src="" alt="Preview">
+                </div>
+                <input type="file" id="inventoryItemImage" accept="image/*">
+            </div>
+            
+            <div class="form-group">
+                <label>Trạng thái</label>
+                <div class="status-options">
+                    <div class="form-group">
+                        <label>
+                            <input type="radio" name="inventoryStatus" value="in-stock" checked>
+                            <span class="status in-stock">
+                                <span class="status-dot"></span> Còn hàng
+                            </span>
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="radio" name="inventoryStatus" value="low-stock">
+                            <span class="status low-stock">
+                                <span class="status-dot"></span> Sắp hết
+                            </span>
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="radio" name="inventoryStatus" value="out-of-stock">
+                            <span class="status out-of-stock">
+                                <span class="status-dot"></span> Hết hàng
+                            </span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button id="btnCancelInventoryItem" class="btn">Hủy bỏ</button>
+            <button id="btnSaveInventoryItem" class="btn btn-primary">Lưu hàng</button>
+        </div>
+    </div>
+</div>
+
 <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-<script src="js/home.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 
+<script>
+    // Firebase config
+    const firebaseConfig = {
+        apiKey: "AIzaSyDV06m47eD90e8n3vTd6B9NmKsEOUz_r_E",
+        authDomain: "foodiee-506f6.firebaseapp.com",
+        projectId: "foodiee-506f6",
+        storageBucket: "foodiee-506f6.appspot.com",
+        messagingSenderId: "628837902932",
+        appId: "1:628837902932:web:fcdfcfca84ad76e700dbc1",
+        measurementId: "G-3ZNLCPWM94"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+</script>
+
+<!-- Link to external JavaScript file -->
+<script src="js/warehouse.js"></script>
 </body>
 </html>

@@ -61,6 +61,8 @@ function setupFirebaseListeners() {
     
     // Create modals
     createModals();
+    setupPaymentQR();
+
 }
 
 // Create modals
@@ -481,6 +483,7 @@ function formatCurrency(amount) {
 }
 
 // Update date and time display
+// Update date and time display
 function updateDateTime() {
     const now = new Date();
     const options = { 
@@ -492,4 +495,97 @@ function updateDateTime() {
         minute: '2-digit'
     };
     currentDateTime.textContent = now.toLocaleDateString('vi-VN', options);
+}
+
+// ✅ Tách hàm setupPaymentQR ra ngoài updateDateTime
+function setupPaymentQR() {
+  const btn = document.getElementById('btnSetupPayment');
+  if (!btn) return;
+
+  // Tạo modal QR nếu chưa tồn tại
+  const existingModal = document.getElementById('paymentModal');
+  if (!existingModal) {
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.id = 'paymentModal';
+    modal.innerHTML = `
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Thiết lập mã QR thanh toán</h2>
+          <button class="close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+          <input type="file" id="qrUpload" accept="image/*" class="form-control">
+          <img id="qrPreview" style="max-width: 100%; margin-top: 10px; display: none;" />
+        </div>
+        <div class="modal-footer">
+          <button class="btn" id="btnCancelQR">Hủy</button>
+          <button class="btn btn-primary" id="btnSaveQR">Lưu</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  }
+
+  const modal = document.getElementById('paymentModal');
+  const qrUpload = document.getElementById('qrUpload');
+  const qrPreview = document.getElementById('qrPreview');
+
+  // Sự kiện khi chọn file mới
+  qrUpload.onchange = () => {
+    const file = qrUpload.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        qrPreview.src = e.target.result;
+        qrPreview.style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Hiển thị modal và load ảnh QR từ Firebase
+  btn.onclick = () => {
+    qrUpload.value = '';
+    qrPreview.style.display = 'none';
+    qrPreview.src = '';
+
+    // Hiển thị ảnh cũ nếu có
+    db.ref('paymentMethods/qrImage').once('value').then(snapshot => {
+      const image = snapshot.val();
+      if (image) {
+        qrPreview.src = image;
+        qrPreview.style.display = 'block';
+      }
+    });
+
+    modal.style.display = 'flex';
+  };
+
+  // Nút đóng modal
+  modal.querySelector('.close-btn').onclick =
+  modal.querySelector('#btnCancelQR').onclick = () => {
+    modal.style.display = 'none';
+  };
+
+  // Nút lưu QR mới
+  modal.querySelector('#btnSaveQR').onclick = () => {
+    const file = qrUpload.files[0];
+    if (!file) return alert("Vui lòng chọn ảnh QR mới!");
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const base64 = e.target.result;
+      db.ref('paymentMethods/qrImage').set(base64)
+        .then(() => {
+          alert("Đã lưu ảnh QR mới thành công!");
+          modal.style.display = 'none';
+        })
+        .catch(err => {
+          console.error("Lỗi khi lưu ảnh QR:", err);
+          alert("Lỗi khi lưu ảnh QR");
+        });
+    };
+    reader.readAsDataURL(file);
+  };
 }

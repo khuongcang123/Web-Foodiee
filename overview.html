@@ -6,38 +6,136 @@
     <title>Tổng quan - Foodiee</title>
     <link rel="stylesheet" href="css/home.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    
-<div id="sidebar" class="sidebar open">
-    <button id="toggleSidebar" class="toggle-btn">
-        <i class="fas fa-bars"></i>
-    </button>
-    <nav class="nav-menu">
-        <ul>
-            <li><a href="overview.html"><i class="fas fa-chart-line"></i><span class="link-text">Tổng quan</span></a></li>
-            <li><a href="staff.html"><i class="fas fa-users"></i><span class="link-text">Quản lý nhân viên</span></a></li>
-            <li><a href="restaurant.html"><i class="fas fa-utensils"></i><span class="link-text">Quản lý nhà hàng</span></a></li>
-            <li><a href="warehouse.html"><i class="fas fa-warehouse"></i><span class="link-text">Quản lý kho</span></a></li>
-            <li><a href="account.html"><i class="fas fa-user-cog"></i><span class="link-text">Tài khoản</span></a></li>
-        </ul>
-    </nav>
-</div>
+    <div id="sidebar" class="sidebar">
+        <button id="toggleSidebar" class="toggle-btn">
+            <i class="fas fa-bars"></i>
+        </button>
+        <nav class="nav-menu">
+            <ul>
+                <li><a href="overview.html" class="active"><i class="fas fa-chart-line"></i><span class="link-text">Tổng quan</span></a></li>
+                <li><a href="staff.html"><i class="fas fa-users"></i><span class="link-text">Quản lý nhân viên</span></a></li>
+                <li><a href="restaurant.html"><i class="fas fa-utensils"></i><span class="link-text">Quản lý nhà hàng</span></a></li>
+                <li><a href="warehouse.html"><i class="fas fa-warehouse"></i><span class="link-text">Quản lý kho</span></a></li>
+                <li><a href="account.html"><i class="fas fa-user-cog"></i><span class="link-text">Tài khoản</span></a></li>
+            </ul>
+        </nav>
+    </div>
 
     <main>
         <h1>Tổng quan</h1>
-        <p>Thông tin tổng quan về hệ thống.</p>
+        
+        <div class="summary-cards">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon revenue">
+                        <i class="fas fa-money-bill-wave"></i>
+                    </div>
+                    <div>
+                        <div class="card-title">DOANH THU HÔM NAY</div>
+                        <div class="card-value" id="todayRevenue">0 VNĐ</div>
+                    </div>
+                </div>
+                <div class="card-footer" id="revenueChange">
+                    Đang tải...
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon customers">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div>
+                        <div class="card-title">KHÁCH HÀNG HÔM NAY</div>
+                        <div class="card-value" id="todayCustomers">0</div>
+                    </div>
+                </div>
+                <div class="card-footer" id="customersChange">
+                    Đang tải...
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon orders">
+                        <i class="fas fa-shopping-cart"></i>
+                    </div>
+                    <div>
+                        <div class="card-title">TỶ LỆ MANG VỀ</div>
+                        <div class="card-value" id="takeawayRate">0%</div>
+                    </div>
+                </div>
+                <div class="card-footer" id="takeawayChange">
+                    Đang tải...
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon debt">
+                        <i class="fas fa-file-invoice-dollar"></i>
+                    </div>
+                    <div>
+                        <div class="card-title">CÔNG NỢ THÁNG</div>
+                        <div class="card-value" id="monthDebt">0 VNĐ</div>
+                    </div>
+                </div>
+                <div class="card-footer" id="debtChange">
+                    Đang tải...
+                </div>
+            </div>
+        </div>
+        
+        <div class="charts-container">
+            <div class="chart-card">
+                <div class="chart-title">DOANH THU THEO NGÀY (THÁNG NÀY)</div>
+                <div class="chart-container">
+                    <canvas id="revenueChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="chart-card">
+                <div class="chart-title">LƯỢNG KHÁCH THEO NGÀY (THÁNG NÀY)</div>
+                <div class="chart-container">
+                    <canvas id="customersChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="chart-card">
+                <div class="chart-title">PHÂN BỔ ĐƠN HÀNG</div>
+                <div class="chart-container">
+                    <canvas id="orderTypeChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div class="activity-section">
+            <div class="activity-title">HOẠT ĐỘNG GẦN ĐÂY</div>
+            <ul class="activity-list" id="activityList">
+                <li class="activity-item">
+                    <i class="fas fa-spinner fa-spin"></i> Đang tải dữ liệu...
+                </li>
+            </ul>
+        </div>
     </main>
-    
-<footer>
-    &copy; 2023 Foodiee - Tất cả quyền được bảo lưu
-</footer>
 
-    
-<!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-<script src="js/home.js"></script>
-
+    <script src="js/home.js"></script>
+    <!-- Thêm phần này trước thẻ </body> -->
+<div id="testDataPanel" class="test-data-panel">
+    <button id="generateTestData" class="btn-test">
+        <i class="fas fa-vial"></i> Tạo dữ liệu mẫu tháng 5
+    </button>
+    <div class="test-data-info">
+        <p>Dùng để test báo cáo tháng 5. Dữ liệu sẽ được lưu tạm thời.</p>
+    </div>
+</div>
 </body>
 </html>

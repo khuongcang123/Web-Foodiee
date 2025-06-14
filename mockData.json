@@ -1,0 +1,23 @@
+{
+  "2025-06-01": {
+    "revenue": 1200000,
+    "customers": 25,
+    "dineIn": 14,
+    "takeOut": 11,
+    "debt": 100000
+  },
+  "2025-06-02": {
+    "revenue": 900000,
+    "customers": 18,
+    "dineIn": 10,
+    "takeOut": 8,
+    "debt": 150000
+  },
+  "2025-06-03": {
+    "revenue": 1100000,
+    "customers": 22,
+    "dineIn": 12,
+    "takeOut": 10,
+    "debt": 200000
+  }
+}

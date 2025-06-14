@@ -1,11 +1,20 @@
-<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Quản lý nhân viên - Foodiee</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="css/home.css">
     <link rel="stylesheet" href="css/staff.css" />
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="js/staff.js"></script>
+    <style>
+        .form-group.full-width {
+            width: 100%;
+        }
+    </style>
 </head>
 <body>
     <!-- Sidebar -->
@@ -72,10 +81,18 @@
                     <div class="form-group">
                         <label for="staffId">Mã nhân viên</label>
                         <input type="text" id="staffId" required>
+                        <small class="form-text">Mã nhân viên (ví dụ: NV001)</small>
                     </div>
                     <div class="form-group">
                         <label for="staffName">Tên nhân viên</label>
                         <input type="text" id="staffName" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group full-width">
+                        <label for="staffEmail">Email</label>
+                        <input type="email" id="staffEmail" required>
+                        <small class="form-text">Sử dụng địa chỉ email để tạo tài khoản</small>
                     </div>
                 </div>
                 <div class="form-row">
@@ -85,7 +102,31 @@
                     </div>
                     <div class="form-group">
                         <label for="staffPosition">Chức vụ</label>
-                        <input type="text" id="staffPosition" required>
+                        <select id="staffPosition" required>
+                            <option value="">-- Chọn chức vụ --</option>
+                            <option value="Quản lý">Quản lý</option>
+                            <option value="Thu ngân">Thu ngân</option>
+                            <option value="Phục vụ">Phục vụ</option>
+                            <option value="Bếp">Bếp</option>
+                            <option value="Tạp vụ">Tạp vụ</option>
+                            <option value="Pha chế">Pha chế</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="staffSalaryCoefficient">Hệ số lương</label>
+                        <input type="number" id="staffSalaryCoefficient" step="0.1" min="1.0" value="1.0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="staffBaseSalary">Lương cơ bản (VNĐ)</label>
+                        <input type="number" id="staffBaseSalary" min="0" value="5000000" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="staffAllowance">Phụ cấp (VNĐ)</label>
+                        <input type="number" id="staffAllowance" min="0" value="0" required>
                     </div>
                 </div>
                 <div class="form-actions">
@@ -104,12 +145,13 @@
                         <th>Tên nhân viên</th>
                         <th>Số điện thoại</th>
                         <th>Chức vụ</th>
+                        <th>Hệ số lương</th>
                         <th>Hành động</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td colspan="5" style="text-align: center; padding: 30px;">
+                        <td colspan="6" style="text-align: center; padding: 30px;">
                             <i class="fas fa-spinner fa-spin"></i> Đang tải dữ liệu...
                         </td>
                     </tr>
@@ -118,16 +160,119 @@
         </div>
     </div>
 
+    <!-- Modal chi tiết nhân viên -->
+    <div id="staffDetailModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Chi tiết nhân viên</h2>
+            <button class="close-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="staff-info">
+                <div class="info-item">
+                    <div class="info-label">Mã nhân viên</div>
+                    <div class="info-value" id="detailStaffId">NV001</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Tên nhân viên</div>
+                    <div class="info-value" id="detailStaffName">Nguyễn Văn A</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Chức vụ</div>
+                    <div class="info-value" id="detailStaffPosition">Quản lý</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Email</div>
+                    <div class="info-value" id="detailStaffEmail">nv001@example.com</div>
+                </div>
+
+                <!-- Editable fields -->
+                <div class="info-item">
+                    <div class="info-label">Hệ số lương</div>
+                    <input type="number" id="detailSalaryCoefficient" step="0.1" min="1.0" class="info-input" />
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Lương cơ bản (VNĐ)</div>
+                    <input type="number" id="detailBaseSalary" min="0" class="info-input" />
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Phụ cấp (VNĐ)</div>
+                    <input type="number" id="detailAllowance" min="0" class="info-input" />
+                </div>
+
+                <!-- Calculated salary -->
+                <div class="info-item">
+                    <div class="info-label">Tổng lương tháng</div>
+                    <div class="info-value salary-value" id="detailTotalSalary">10,000,000 VNĐ</div>
+                </div>
+            </div>
+
+            <div class="form-actions" style="text-align:right; margin-top: 10px;">
+                <button id="btnSaveSalaryChanges" class="btn primary">
+                    <i class="fas fa-save"></i> Lưu thay đổi
+                </button>
+            </div>
+
+            <div class="timekeeping-controls">
+                <div class="month-selector">
+                    <label for="timekeepingMonth">Tháng:</label>
+                    <select id="timekeepingMonth">
+                        <option value="0">Tháng 1</option>
+                        <option value="1">Tháng 2</option>
+                        <option value="2">Tháng 3</option>
+                        <option value="3">Tháng 4</option>
+                        <option value="4">Tháng 5</option>
+                        <option value="5">Tháng 6</option>
+                        <option value="6">Tháng 7</option>
+                        <option value="7">Tháng 8</option>
+                        <option value="8">Tháng 9</option>
+                        <option value="9">Tháng 10</option>
+                        <option value="10">Tháng 11</option>
+                        <option value="11">Tháng 12</option>
+                    </select>
+                    <select id="timekeepingYear">
+                        <!-- JS will populate years -->
+                    </select>
+                </div>
+                <button id="btnExportTimekeeping" class="btn primary">
+                    <i class="fas fa-file-export"></i> Xuất báo cáo
+                </button>
+            </div>
+
+            <div class="table-container">
+                <table id="timekeepingTable">
+                    <thead>
+                        <tr>
+                            <th>Ngày</th>
+                            <th>Check-in</th>
+                            <th>Check-out</th>
+                            <th>Thời gian làm việc</th>
+                            <th>Trạng thái</th>
+                        </tr>
+                    </thead>
+                    <tbody id="timekeepingTableBody">
+                        <tr>
+                            <td colspan="5" style="text-align: center; padding: 20px;">
+                                <div class="spinner"></div> Đang tải dữ liệu chấm công...
+                            </td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                            <th colspan="3">Tổng cộng</th>
+                            <th id="totalWorkHours">0 giờ</th>
+                            <th id="totalWorkDays">0 công</th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
     <!-- Thông báo -->
     <div class="notification" id="notification">Thao tác thành công!</div>
 
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-
-    <!-- Script xử lý -->
-    <script src="js/staff.js"></script>
+    
     <script src="js/home.js"></script>
+    <script src="js/staff.js"></script>
 </body>
 </html>

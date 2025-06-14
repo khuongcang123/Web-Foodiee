@@ -4,18 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quản lý nhà hàng - Foodiee</title>
-    
-    <link rel="stylesheet" href="css/nhahang.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+    <link rel="stylesheet" href="css/nhahang.css">
 </head>
-<body>
+<body class="page-restaurant">
 <div id="firebase-loading" class="firebase-loading">
     <div class="spinner"></div>
     <p>Đang kết nối với hệ thống...</p>
 </div>
 
-<div id="app" style="display: none;">
+<div id="app" style="display: flex;">
     <div id="sidebar" class="sidebar open">
         <button id="toggleSidebar" class="toggle-btn">
             <i class="fas fa-bars"></i>
@@ -32,82 +30,953 @@
     </div>
 
     <main>
-        <div class="header">
-            <div>
-                <h1>Quản lý nhà hàng</h1>
-                <p>Thông tin nhà hàng và chi nhánh</p>
-            </div>
-            <div class="current-time">
-                <i class="far fa-clock"></i> <span id="currentDateTime">Thứ Sáu, 6 tháng 6, 2025 10:30 AM</span>
-            </div>
-        </div>
-        
-        <!-- Statistics Section -->
-        <div class="stats-container">
-            <div class="stat-card">
-                <h3>Số khách trong quán</h3>
-                <div class="value" id="customers-in-restaurant">0</div>
-                <div class="info">
-                    <span>Đã phục vụ hôm nay: <span id="customers-served">0</span></span>
+        <div class="content-wrapper">
+            <div class="header">
+                <div>
+                    <h1>Quản lý nhà hàng</h1>
+                    <p>Thông tin nhà hàng và chi nhánh</p>
+                </div>
+                <div class="current-time">
+                    <i class="far fa-clock"></i> <span id="currentDateTime">Thứ Sáu, 6 tháng 6, 2025 10:30 AM</span>
                 </div>
             </div>
-            
-            <div class="stat-card">
-                <h3>Nhân viên đang làm</h3>
-                <div class="value" id="staff-working">0</div>
-                <div class="info">
-                    <span>Phục vụ: <span id="staff-serving">0</span> | Bếp: <span id="staff-cooking">0</span></span>
-                </div>
-            </div>
-            
-            <div class="stat-card">
-                <h3>Doanh thu hôm nay</h3>
-                <div class="value" id="revenue-today">0₫</div>
-                <div class="info">
-                    <span>Hóa đơn: <span id="invoices-count">0</span></span>
-                </div>
-            </div>
-            
-            <div class="stat-card">
-                <h3>Phương thức thanh toán</h3>
-                <div class="payment-methods">
-                    <div class="payment-method">
-                        <i class="fas fa-money-bill-wave"></i> Tiền mặt: <span id="cash-percentage">0%</span>
-                    </div>
-                    <div class="payment-method">
-                        <i class="fas fa-exchange-alt"></i> Chuyển khoản: <span id="transfer-percentage">0%</span>
+
+            <div class="stats-container">
+                <div class="stat-card">
+                    <h3>Số khách trong quán</h3>
+                    <div class="value" id="customers-in-restaurant">0</div>
+                    <div class="info">
+                        <span>Đã phục vụ hôm nay: <span id="customers-served">0</span></span>
                     </div>
                 </div>
-                <div class="info">
-                    <span>Tiền mặt: <span id="cash-amount">0₫</span></span>
-                    <span>Chuyển khoản: <span id="transfer-amount">0₫</span></span>
+
+                <div class="stat-card">
+                    <h3>Nhân viên đang làm</h3>
+                    <div class="value" id="staff-working">0</div>
+                    <div class="info">
+                        <span>Phục vụ: <span id="staff-serving">0</span> | Bếp: <span id="staff-cooking">0</span></span>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <h3>Doanh thu hôm nay</h3>
+                    <div class="value" id="revenue-today">0₫</div>
+                    <div class="info">
+                        <span>Hóa đơn: <span id="invoices-count">0</span></span>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <h3>Phương thức thanh toán</h3>
+                    <button id="btnSetupPayment" class="btn btn-secondary" style="margin-bottom: 10px;">
+                        <i class="fas fa-cog"></i> Thiết lập phương thức thanh toán
+                    </button>
+
+                    <div class="payment-methods">
+                        <div class="payment-method">
+                            <i class="fas fa-money-bill-wave"></i> Tiền mặt: <span id="cash-percentage">0%</span>
+                        </div>
+                        <div class="payment-method">
+                            <i class="fas fa-exchange-alt"></i> Chuyển khoản: <span id="transfer-percentage">0%</span>
+                        </div>
+                    </div>
+                    <div class="info">
+                        <span>Tiền mặt: <span id="cash-amount">0₫</span></span>
+                        <span>Chuyển khoản: <span id="transfer-amount">0₫</span></span>
+                    </div>
                 </div>
             </div>
-        </div>
-        
-        <!-- Area Management Section -->
-        <div class="management-header">
-            <h2>Quản lý khu vực & bàn</h2>
-            <button id="btnAddArea" class="btn btn-primary">
-                <i class="fas fa-plus"></i> Thêm khu vực
-            </button>
-        </div>
-        
-        <div class="areas-container" id="areasContainer">
-            <!-- Areas will be dynamically added here -->
+
+            <div class="management-header">
+                <h2>Quản lý khu vực & bàn</h2>
+                <button id="btnAddArea" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Thêm khu vực
+                </button>
+            </div>
+
+            <div class="areas-container" id="areasContainer">
+                <!-- Khu vực và bàn sẽ được thêm vào bằng JS -->
+            </div>
+
+            <!-- PHẦN CÔNG NỢ MỚI -->
+            <div class="management-header" style="margin-top: 30px;">
+                <h2>Công nợ tháng này</h2>
+                <button id="btnAddDebt" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Tạo công nợ
+                </button>
+            </div>
+
+            <div class="debt-container" id="debtContainer" style="margin-top: 15px;">
+                <!-- Danh sách công nợ sẽ được thêm ở đây -->
+            </div>
+
+            <div class="debt-summary" id="debtSummary">
+                Tổng công nợ: <span class="debt-total" id="totalDebtAmount">0₫</span>
+            </div>
         </div>
     </main>
-        
-    
 </div>
 
-<!-- Firebase SDK -->
+<!-- Modal công nợ -->
+<div id="debtModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="modalDebtTitle">Thêm công nợ mới</h2>
+            <button class="close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label for="debtName">Tên công nợ</label>
+                <input type="text" id="debtName" class="form-control" placeholder="Nhập tên công nợ">
+            </div>
+            <div class="form-group">
+                <label for="debtType">Loại công nợ</label>
+                <select id="debtType" class="form-control">
+                    <option value="salary">Lương nhân viên</option>
+                    <option value="material">Tiền mua nguyên vật liệu</option>
+                    <option value="other">Khoản khác</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="debtAmount">Số tiền (VNĐ)</label>
+                <input type="number" id="debtAmount" class="form-control" min="0" placeholder="Nhập số tiền">
+            </div>
+            <div class="form-group">
+                <label for="debtStatus">Trạng thái</label>
+                <select id="debtStatus" class="form-control">
+                    <option value="unpaid">Chưa thanh toán</option>
+                    <option value="paid">Đã thanh toán</option>
+                </select>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button id="btnCancelDebt" class="btn">Hủy bỏ</button>
+            <button id="btnSaveDebt" class="btn btn-primary">Lưu công nợ</button>
+        </div>
+    </div>
+</div>
+
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
-<script src="js/home.js"></script>
-<script src="js/nhahang.js"></script>
+<script>
+// Firebase configuration
+const firebaseConfig = {
+    apiKey: "AIzaSyDV06m47eD90e8n3vTd6B9NmKsEOUz_r_E",
+    authDomain: "foodiee-506f6.firebaseapp.com",
+    projectId: "foodiee-506f6",
+    storageBucket: "foodiee-506f6.appspot.com",
+    messagingSenderId: "628837902932",
+    appId: "1:628837902932:web:fcdfcfca84ad76e700dbc1",
+    measurementId: "G-3ZNLCPWM94"
+};
 
+// DOM elements
+const areasContainer = document.getElementById('areasContainer');
+const appContainer = document.getElementById('app');
+const loadingContainer = document.getElementById('firebase-loading');
+const debtContainer = document.getElementById('debtContainer');
+const totalDebtAmount = document.getElementById('totalDebtAmount');
+
+// Statistics elements
+const customersInRestaurantEl = document.getElementById('customers-in-restaurant');
+const customersServedEl = document.getElementById('customers-served');
+const staffWorkingEl = document.getElementById('staff-working');
+const staffServingEl = document.getElementById('staff-serving');
+const staffCookingEl = document.getElementById('staff-cooking');
+const revenueTodayEl = document.getElementById('revenue-today');
+const invoicesCountEl = document.getElementById('invoices-count');
+const cashPercentageEl = document.getElementById('cash-percentage');
+const transferPercentageEl = document.getElementById('transfer-percentage');
+const cashAmountEl = document.getElementById('cash-amount');
+const transferAmountEl = document.getElementById('transfer-amount');
+
+// Firebase references
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.database();
+const areasRef = db.ref('areas');
+const statisticsRef = db.ref('statistics');
+const debtsRef = db.ref('debts');
+const currentDateTime = document.getElementById('currentDateTime');
+
+// Variables for current editing state
+let currentAreaId = null;
+let currentTableId = null;
+let currentDebtId = null;
+let isEditingArea = false;
+let isEditingTable = false;
+let isEditingDebt = false;
+
+// Initialize the page
+document.addEventListener('DOMContentLoaded', function() {
+    // Hide app container until Firebase is ready
+    appContainer.style.display = 'none';
+    
+    // Set up Firebase listeners
+    setupFirebaseListeners();
+    
+    // Update time every minute
+    updateDateTime();
+    setInterval(updateDateTime, 60000);
+    
+    // Create modals
+    createModals();
+    setupPaymentQR();
+});
+
+// Set up Firebase listeners
+function setupFirebaseListeners() {
+    // Listen for auth state changes
+    auth.onAuthStateChanged(user => {
+        if (!user) {
+            window.location.href = "index.html";
+        } else {
+            // Show app container and hide loading
+            if (loadingContainer) loadingContainer.style.display = 'none';
+            appContainer.style.display = 'block';
+        }
+    });
+    
+    // Listen for areas data
+    areasRef.on('value', (snapshot) => {
+        const areasData = snapshot.val();
+        renderAreas(areasData);
+    });
+    
+    // Listen for statistics data
+    statisticsRef.on('value', (snapshot) => {
+        const statsData = snapshot.val();
+        updateStatistics(statsData);
+    });
+    
+    // Listen for debts data
+    debtsRef.on('value', (snapshot) => {
+        const debtsData = snapshot.val();
+        renderDebts(debtsData);
+        updateDebtSummary(debtsData);
+    });
+}
+
+// Create modals
+function createModals() {
+    // Area modal
+    const areaModal = document.createElement('div');
+    areaModal.id = 'areaModal';
+    areaModal.className = 'modal';
+    areaModal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalAreaTitle">Thêm khu vực mới</h2>
+                <button class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="areaName">Tên khu vực</label>
+                    <input type="text" id="areaName" class="form-control" placeholder="Nhập tên khu vực">
+                </div>
+                <div class="form-group">
+                    <label for="areaDescription">Mô tả</label>
+                    <textarea id="areaDescription" class="form-control" placeholder="Mô tả khu vực" rows="3"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="btnCancelArea" class="btn">Hủy bỏ</button>
+                <button id="btnSaveArea" class="btn btn-primary">Lưu khu vực</button>
+            </div>
+        </div>
+    `;
+    
+    // Table modal
+    const tableModal = document.createElement('div');
+    tableModal.id = 'tableModal';
+    tableModal.className = 'modal';
+    tableModal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTableTitle">Thêm bàn mới</h2>
+                <button class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="tableNumber">Số bàn</label>
+                    <input type="text" id="tableNumber" class="form-control" placeholder="Nhập số bàn">
+                </div>
+                <div class="form-group">
+                    <label for="tableCapacity">Sức chứa</label>
+                    <input type="number" id="tableCapacity" class="form-control" min="2" max="20" value="4">
+                </div>
+                <div class="form-group">
+                    <label for="tableStatus">Trạng thái</label>
+                    <select id="tableStatus" class="form-control">
+                        <option value="available">Trống</option>
+                        <option value="occupied">Đang sử dụng</option>
+                        <option value="reserved">Đã đặt trước</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="btnCancelTable" class="btn">Hủy bỏ</button>
+                <button id="btnSaveTable" class="btn btn-primary">Lưu bàn</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(areaModal);
+    document.body.appendChild(tableModal);
+    
+    // Get modal elements
+    const btnAddArea = document.getElementById('btnAddArea');
+    const btnSaveArea = document.getElementById('btnSaveArea');
+    const btnCancelArea = document.getElementById('btnCancelArea');
+    const btnSaveTable = document.getElementById('btnSaveTable');
+    const btnCancelTable = document.getElementById('btnCancelTable');
+    const modalAreaTitle = document.getElementById('modalAreaTitle');
+    const modalTableTitle = document.getElementById('modalTableTitle');
+    const areaNameInput = document.getElementById('areaName');
+    const areaDescInput = document.getElementById('areaDescription');
+    const tableNumberInput = document.getElementById('tableNumber');
+    const tableCapacityInput = document.getElementById('tableCapacity');
+    const tableStatusInput = document.getElementById('tableStatus');
+    
+    // Setup event listeners
+    setupEventListeners();
+    
+    function setupEventListeners() {
+        // Area modal
+        btnAddArea.addEventListener('click', () => {
+            isEditingArea = false;
+            modalAreaTitle.textContent = "Thêm khu vực mới";
+            areaNameInput.value = "";
+            areaDescInput.value = "";
+            areaModal.style.display = "flex";
+        });
+        
+        btnSaveArea.addEventListener('click', saveArea);
+        btnCancelArea.addEventListener('click', () => areaModal.style.display = "none");
+        
+        // Table modal
+        btnSaveTable.addEventListener('click', saveTable);
+        btnCancelTable.addEventListener('click', () => tableModal.style.display = "none");
+        
+        // Debt modal
+        const btnAddDebt = document.getElementById('btnAddDebt');
+        const btnSaveDebt = document.getElementById('btnSaveDebt');
+        const btnCancelDebt = document.getElementById('btnCancelDebt');
+        const modalDebtTitle = document.getElementById('modalDebtTitle');
+        const debtNameInput = document.getElementById('debtName');
+        const debtTypeInput = document.getElementById('debtType');
+        const debtAmountInput = document.getElementById('debtAmount');
+        const debtStatusInput = document.getElementById('debtStatus');
+        
+        if (btnAddDebt) {
+            btnAddDebt.addEventListener('click', () => {
+                isEditingDebt = false;
+                modalDebtTitle.textContent = "Thêm công nợ mới";
+                debtNameInput.value = "";
+                debtTypeInput.value = "salary";
+                debtAmountInput.value = "";
+                debtStatusInput.value = "unpaid";
+                document.getElementById('debtModal').style.display = "flex";
+            });
+        }
+        
+        if (btnSaveDebt) {
+            btnSaveDebt.addEventListener('click', saveDebt);
+        }
+        
+        if (btnCancelDebt) {
+            btnCancelDebt.addEventListener('click', () => document.getElementById('debtModal').style.display = "none");
+        }
+        
+        // Close modals when clicking outside
+        window.addEventListener('click', (e) => {
+            if (e.target === areaModal) areaModal.style.display = "none";
+            if (e.target === tableModal) tableModal.style.display = "none";
+            if (e.target === document.getElementById('debtModal')) document.getElementById('debtModal').style.display = "none";
+        });
+        
+        // Close buttons
+        document.querySelectorAll('.close-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                areaModal.style.display = "none";
+                tableModal.style.display = "none";
+                document.getElementById('debtModal').style.display = "none";
+            });
+        });
+    }
+}
+
+// Render areas and tables
+function renderAreas(areasData) {
+    if (!areasData) {
+        areasContainer.innerHTML = '<div class="no-data">Chưa có khu vực nào. Hãy thêm khu vực đầu tiên!</div>';
+        return;
+    }
+    
+    areasContainer.innerHTML = '';
+    
+    Object.keys(areasData).forEach(areaId => {
+        const area = areasData[areaId];
+        const areaCard = document.createElement('div');
+        areaCard.className = 'area-card';
+        areaCard.innerHTML = `
+            <div class="area-header">
+                <h3>${area.name}</h3>
+                <div class="area-actions">
+                    <button class="edit-area" data-id="${areaId}">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="delete-area" data-id="${areaId}">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="tables-container">
+                ${renderTables(area.tables, areaId)}
+                <div class="table-card add-table-btn" data-area="${areaId}">
+                    <i class="fas fa-plus"></i>
+                    <span>Thêm bàn</span>
+                </div>
+            </div>
+        `;
+        areasContainer.appendChild(areaCard);
+    });
+    
+    // Add event listeners to action buttons
+    document.querySelectorAll('.edit-area').forEach(btn => {
+        btn.addEventListener('click', () => editArea(btn.dataset.id));
+    });
+    
+    document.querySelectorAll('.delete-area').forEach(btn => {
+        btn.addEventListener('click', () => deleteArea(btn.dataset.id));
+    });
+    
+    document.querySelectorAll('.edit-table').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            editTable(btn.dataset.area, btn.dataset.id);
+        });
+    });
+    
+    document.querySelectorAll('.delete-table').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            deleteTable(btn.dataset.area, btn.dataset.id);
+        });
+    });
+    
+    document.querySelectorAll('.table-card:not(.add-table-btn)').forEach(card => {
+        card.addEventListener('click', () => {
+            const areaId = card.dataset.area;
+            const tableId = card.dataset.id;
+            // Implement table selection functionality
+            alert(`Bàn được chọn: ${tableId} trong khu vực ${areaId}`);
+        });
+    });
+    
+    document.querySelectorAll('.add-table-btn').forEach(btn => {
+        btn.addEventListener('click', () => addTable(btn.dataset.area));
+    });
+}
+
+// Render tables for an area
+function renderTables(tables, areaId) {
+    if (!tables) return '<div class="no-tables">Chưa có bàn nào trong khu vực này</div>';
+    
+    return Object.keys(tables).map(tableId => {
+        const table = tables[tableId];
+        const statusClass = table.status === 'occupied' ? 'occupied' : 
+                          table.status === 'reserved' ? 'reserved' : '';
+        const guestBadge = table.guests > 0 ? `<div class="guests">${table.guests}</div>` : '';
+        
+        return `
+            <div class="table-card ${statusClass}" 
+                 data-area="${areaId}" 
+                 data-id="${tableId}">
+                ${guestBadge}
+                <div class="table-number">${table.number}</div>
+                <div class="capacity">${table.capacity} chỗ</div>
+                <div class="table-actions">
+                    <button class="edit-table" 
+                            data-area="${areaId}" 
+                            data-id="${tableId}">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="delete-table" 
+                            data-area="${areaId}" 
+                            data-id="${tableId}">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// Edit area
+function editArea(areaId) {
+    areasRef.child(areaId).once('value', (snapshot) => {
+        const area = snapshot.val();
+        if (area) {
+            isEditingArea = true;
+            currentAreaId = areaId;
+            document.getElementById('modalAreaTitle').textContent = "Chỉnh sửa khu vực";
+            document.getElementById('areaName').value = area.name;
+            document.getElementById('areaDescription').value = area.description || '';
+            document.getElementById('areaModal').style.display = "flex";
+        }
+    });
+}
+
+// Delete area
+function deleteArea(areaId) {
+    if (confirm("Bạn có chắc chắn muốn xóa khu vực này? Tất cả các bàn trong khu vực sẽ bị xóa.")) {
+        areasRef.child(areaId).remove()
+            .then(() => {
+                console.log("Khu vực đã được xóa");
+            })
+            .catch((error) => {
+                console.error("Lỗi khi xóa khu vực: ", error);
+                alert("Đã xảy ra lỗi khi xóa khu vực");
+            });
+    }
+}
+
+// Save area (add or edit)
+function saveArea() {
+    const areaName = document.getElementById('areaName').value.trim();
+    const areaDesc = document.getElementById('areaDescription').value.trim();
+    
+    if (!areaName) {
+        alert("Vui lòng nhập tên khu vực");
+        return;
+    }
+    
+    const areaData = {
+        name: areaName,
+        description: areaDesc
+    };
+    
+    if (isEditingArea) {
+        // Update existing area
+        areasRef.child(currentAreaId).update(areaData)
+            .then(() => {
+                document.getElementById('areaModal').style.display = "none";
+            })
+            .catch((error) => {
+                console.error("Lỗi khi cập nhật khu vực: ", error);
+                alert("Đã xảy ra lỗi khi cập nhật khu vực");
+            });
+    } else {
+        // Add new area
+        areasRef.push(areaData)
+            .then(() => {
+                document.getElementById('areaModal').style.display = "none";
+            })
+            .catch((error) => {
+                console.error("Lỗi khi thêm khu vực: ", error);
+                alert("Đã xảy ra lỗi khi thêm khu vực");
+            });
+    }
+}
+
+// Add table
+function addTable(areaId) {
+    isEditingTable = false;
+    currentAreaId = areaId;
+    document.getElementById('modalTableTitle').textContent = "Thêm bàn mới";
+    document.getElementById('tableNumber').value = "";
+    document.getElementById('tableCapacity').value = "4";
+    document.getElementById('tableStatus').value = "available";
+    document.getElementById('tableModal').style.display = "flex";
+}
+
+// Edit table
+function editTable(areaId, tableId) {
+    areasRef.child(areaId).child('tables').child(tableId).once('value', (snapshot) => {
+        const table = snapshot.val();
+        if (table) {
+            isEditingTable = true;
+            currentAreaId = areaId;
+            currentTableId = tableId;
+            document.getElementById('modalTableTitle').textContent = "Chỉnh sửa bàn";
+            document.getElementById('tableNumber').value = table.number;
+            document.getElementById('tableCapacity').value = table.capacity;
+            document.getElementById('tableStatus').value = table.status;
+            document.getElementById('tableModal').style.display = "flex";
+        }
+    });
+}
+
+// Delete table
+function deleteTable(areaId, tableId) {
+    if (confirm("Bạn có chắc chắn muốn xóa bàn này?")) {
+        areasRef.child(areaId).child('tables').child(tableId).remove()
+            .then(() => {
+                console.log("Bàn đã được xóa");
+            })
+            .catch((error) => {
+                console.error("Lỗi khi xóa bàn: ", error);
+                alert("Đã xảy ra lỗi khi xóa bàn");
+            });
+    }
+}
+
+// Save table (add or edit)
+function saveTable() {
+    const number = document.getElementById('tableNumber').value.trim();
+    const capacity = parseInt(document.getElementById('tableCapacity').value);
+    const status = document.getElementById('tableStatus').value;
+    
+    if (!number) {
+        alert("Vui lòng nhập số bàn");
+        return;
+    }
+    
+    if (isNaN(capacity)) {
+        alert("Sức chứa không hợp lệ");
+        return;
+    }
+    
+    const tableData = {
+        number: number,
+        capacity: capacity,
+        status: status,
+        guests: 0 // Default value
+    };
+    
+    if (isEditingTable) {
+        // Update existing table
+        areasRef.child(currentAreaId).child('tables').child(currentTableId).update(tableData)
+            .then(() => {
+                document.getElementById('tableModal').style.display = "none";
+            })
+            .catch((error) => {
+                console.error("Lỗi khi cập nhật bàn: ", error);
+                alert("Đã xảy ra lỗi khi cập nhật bàn");
+            });
+    } else {
+        // Add new table
+        areasRef.child(currentAreaId).child('tables').push(tableData)
+            .then(() => {
+                document.getElementById('tableModal').style.display = "none";
+            })
+            .catch((error) => {
+                console.error("Lỗi khi thêm bàn: ", error);
+                alert("Đã xảy ra lỗi khi thêm bàn");
+            });
+    }
+}
+
+// Update statistics
+function updateStatistics(statsData) {
+    if (!statsData) return;
+    
+    // Update customers stats
+    customersInRestaurantEl.textContent = statsData.customersInRestaurant || 0;
+    customersServedEl.textContent = statsData.customersServed || 0;
+    
+    // Update staff stats
+    staffWorkingEl.textContent = statsData.staffWorking || 0;
+    staffServingEl.textContent = statsData.staffServing || 0;
+    staffCookingEl.textContent = statsData.staffCooking || 0;
+    
+    // Update revenue stats
+    const revenue = statsData.revenue || 0;
+    revenueTodayEl.textContent = formatCurrency(revenue);
+    invoicesCountEl.textContent = statsData.invoices || 0;
+    
+    // Update payment methods
+    const cashPercentage = statsData.paymentMethods?.cash?.percentage || 0;
+    const transferPercentage = statsData.paymentMethods?.transfer?.percentage || 0;
+    const cashAmount = statsData.paymentMethods?.cash?.amount || 0;
+    const transferAmount = statsData.paymentMethods?.transfer?.amount || 0;
+    
+    cashPercentageEl.textContent = `${cashPercentage}%`;
+    transferPercentageEl.textContent = `${transferPercentage}%`;
+    cashAmountEl.textContent = formatCurrency(cashAmount);
+    transferAmountEl.textContent = formatCurrency(transferAmount);
+}
+
+// Render debts
+function renderDebts(debtsData) {
+    debtContainer.innerHTML = '';
+    
+    if (!debtsData) {
+        debtContainer.innerHTML = '<div class="no-data">Chưa có công nợ nào</div>';
+        return;
+    }
+    
+    Object.keys(debtsData).forEach(debtId => {
+        const debt = debtsData[debtId];
+        const debtItem = document.createElement('div');
+        debtItem.className = 'debt-item';
+        debtItem.innerHTML = `
+            <div class="debt-info">
+                <div class="debt-name">${debt.name}</div>
+                <div class="debt-details">
+                    <span>Loại: ${getDebtTypeName(debt.type)}</span>
+                    <span>Trạng thái: <span class="debt-status ${debt.status === 'paid' ? 'status-paid' : 'status-unpaid'}">${debt.status === 'paid' ? 'Đã thanh toán' : 'Chưa thanh toán'}</span></span>
+                </div>
+            </div>
+            <div class="debt-amount">${formatCurrency(debt.amount)}</div>
+            <div class="debt-actions">
+                <button class="edit-debt" data-id="${debtId}">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="delete-debt" data-id="${debtId}">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        `;
+        debtContainer.appendChild(debtItem);
+    });
+    
+    // Add event listeners to debt action buttons
+    document.querySelectorAll('.edit-debt').forEach(btn => {
+        btn.addEventListener('click', () => editDebt(btn.dataset.id));
+    });
+    
+    document.querySelectorAll('.delete-debt').forEach(btn => {
+        btn.addEventListener('click', () => deleteDebt(btn.dataset.id));
+    });
+}
+
+// Get debt type name
+function getDebtTypeName(type) {
+    switch (type) {
+        case 'salary': return 'Lương nhân viên';
+        case 'material': return 'Tiền mua nguyên vật liệu';
+        case 'other': return 'Khoản khác';
+        default: return type;
+    }
+}
+
+// Edit debt
+function editDebt(debtId) {
+    debtsRef.child(debtId).once('value', (snapshot) => {
+        const debt = snapshot.val();
+        if (debt) {
+            isEditingDebt = true;
+            currentDebtId = debtId;
+            document.getElementById('modalDebtTitle').textContent = "Chỉnh sửa công nợ";
+            document.getElementById('debtName').value = debt.name;
+            document.getElementById('debtType').value = debt.type;
+            document.getElementById('debtAmount').value = debt.amount;
+            document.getElementById('debtStatus').value = debt.status;
+            document.getElementById('debtModal').style.display = "flex";
+        }
+    });
+}
+
+// Delete debt
+function deleteDebt(debtId) {
+    if (confirm("Bạn có chắc chắn muốn xóa công nợ này?")) {
+        debtsRef.child(debtId).remove()
+            .then(() => {
+                console.log("Công nợ đã được xóa");
+            })
+            .catch((error) => {
+                console.error("Lỗi khi xóa công nợ: ", error);
+                alert("Đã xảy ra lỗi khi xóa công nợ");
+            });
+    }
+}
+
+// Save debt (add or edit)
+function saveDebt() {
+    const name = document.getElementById('debtName').value.trim();
+    const type = document.getElementById('debtType').value;
+    const amount = parseFloat(document.getElementById('debtAmount').value);
+    const status = document.getElementById('debtStatus').value;
+    
+    if (!name) {
+        alert("Vui lòng nhập tên công nợ");
+        return;
+    }
+    
+    if (isNaN(amount) || amount <= 0) {
+        alert("Số tiền không hợp lệ");
+        return;
+    }
+    
+    const debtData = {
+        name: name,
+        type: type,
+        amount: amount,
+        status: status,
+        createdAt: firebase.database.ServerValue.TIMESTAMP
+    };
+    
+    if (isEditingDebt) {
+        // Update existing debt
+        debtsRef.child(currentDebtId).update(debtData)
+            .then(() => {
+                document.getElementById('debtModal').style.display = "none";
+            })
+            .catch((error) => {
+                console.error("Lỗi khi cập nhật công nợ: ", error);
+                alert("Đã xảy ra lỗi khi cập nhật công nợ");
+            });
+    } else {
+        // Add new debt
+        debtsRef.push(debtData)
+            .then(() => {
+                document.getElementById('debtModal').style.display = "none";
+            })
+            .catch((error) => {
+                console.error("Lỗi khi thêm công nợ: ", error);
+                alert("Đã xảy ra lỗi khi thêm công nợ");
+            });
+    }
+}
+
+// Update debt summary
+function updateDebtSummary(debtsData) {
+    if (!debtsData) {
+        totalDebtAmount.textContent = formatCurrency(0);
+        return;
+    }
+    
+    let totalDebt = 0;
+    
+    Object.keys(debtsData).forEach(debtId => {
+        const debt = debtsData[debtId];
+        if (debt.status === 'unpaid') {
+            totalDebt += debt.amount;
+        } else if (debt.status === 'paid') {
+            totalDebt -= debt.amount;
+        }
+    });
+    
+    totalDebtAmount.textContent = formatCurrency(totalDebt);
+    
+    // Update color based on total debt
+    if (totalDebt > 0) {
+        totalDebtAmount.style.color = '#d93025';
+    } else if (totalDebt < 0) {
+        totalDebtAmount.style.color = '#137333';
+    } else {
+        totalDebtAmount.style.color = '#333';
+    }
+}
+
+// Format currency
+function formatCurrency(amount) {
+    return new Intl.NumberFormat('vi-VN', {
+        style: 'currency',
+        currency: 'VND'
+    }).format(amount);
+}
+
+// Update date and time display
+function updateDateTime() {
+    const now = new Date();
+    const options = { 
+        weekday: 'long', 
+        day: 'numeric', 
+        month: 'long', 
+        year: 'numeric',
+        hour: '2-digit', 
+        minute: '2-digit'
+    };
+    currentDateTime.textContent = now.toLocaleDateString('vi-VN', options);
+}
+
+// Setup payment QR
+function setupPaymentQR() {
+  const btn = document.getElementById('btnSetupPayment');
+  if (!btn) return;
+
+  // Tạo modal QR nếu chưa tồn tại
+  const existingModal = document.getElementById('paymentModal');
+  if (!existingModal) {
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.id = 'paymentModal';
+    modal.innerHTML = `
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Thiết lập mã QR thanh toán</h2>
+          <button class="close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+          <input type="file" id="qrUpload" accept="image/*" class="form-control">
+          <img id="qrPreview" style="max-width: 100%; margin-top: 10px; display: none;" />
+        </div>
+        <div class="modal-footer">
+          <button class="btn" id="btnCancelQR">Hủy</button>
+          <button class="btn btn-primary" id="btnSaveQR">Lưu</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  }
+
+  const modal = document.getElementById('paymentModal');
+  const qrUpload = document.getElementById('qrUpload');
+  const qrPreview = document.getElementById('qrPreview');
+
+  // Sự kiện khi chọn file mới
+  qrUpload.onchange = () => {
+    const file = qrUpload.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        qrPreview.src = e.target.result;
+        qrPreview.style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Hiển thị modal và load ảnh QR từ Firebase
+  btn.onclick = () => {
+    qrUpload.value = '';
+    qrPreview.style.display = 'none';
+    qrPreview.src = '';
+
+    // Hiển thị ảnh cũ nếu có
+    db.ref('paymentMethods/qrImage').once('value').then(snapshot => {
+      const image = snapshot.val();
+      if (image) {
+        qrPreview.src = image;
+        qrPreview.style.display = 'block';
+      }
+    });
+
+    modal.style.display = 'flex';
+  };
+
+  // Nút đóng modal
+  modal.querySelector('.close-btn').onclick =
+  modal.querySelector('#btnCancelQR').onclick = () => {
+    modal.style.display = 'none';
+  };
+
+  // Nút lưu QR mới
+  modal.querySelector('#btnSaveQR').onclick = () => {
+    const file = qrUpload.files[0];
+    if (!file) return alert("Vui lòng chọn ảnh QR mới!");
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const base64 = e.target.result;
+      db.ref('paymentMethods/qrImage').set(base64)
+        .then(() => {
+          alert("Đã lưu ảnh QR mới thành công!");
+          modal.style.display = 'none';
+        })
+        .catch(err => {
+          console.error("Lỗi khi lưu ảnh QR:", err);
+          alert("Lỗi khi lưu ảnh QR");
+        });
+    };
+    reader.readAsDataURL(file);
+  };
+}
+</script>
 </body>
 </html>
