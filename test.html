@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Quản lý Chi nhánh - Foodiee Management</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    /* CSS styles remain the same as original */
+    :root {
+      --primary: #2c3e50;
+      --secondary: #3498db;
+      --accent: #e74c3c;
+      --light: #ecf0f1;
+      --dark: #2c3e50;
+      --success: #2ecc71;
+      --warning: #f39c12;
+      --gray: #95a5a6;
+      --sidebar-width: 250px;
+      --sidebar-collapsed: 70px;
+      --transition-speed: 0.3s;
+    }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: #f5f7fa;
+      color: #333;
+      overflow-x: hidden;
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ... (all other styles remain unchanged) ... */
+    
+    /* Additional styles for new fields */
+    .address-group {
+      display: flex;
+      gap: 15px;
+    }
+    
+    .address-group > div {
+      flex: 1;
+    }
+    
+    .coordinates-container {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    
+    .coordinates-container input {
+      flex: 1;
+    }
+    
+    .extract-coordinates {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    
+    .extract-coordinates input {
+      flex: 1;
+    }
+    
+    .coordinates-result {
+      background: #f8f9fa;
+      border-radius: 6px;
+      padding: 10px;
+      margin-top: 10px;
+      border-left: 3px solid var(--secondary);
+    }
+    
+    .coordinates-result p {
+      margin: 5px 0;
+    }
+    
+    .coordinates-result.success {
+      border-left-color: var(--success);
+    }
+    
+    .coordinates-result.error {
+      border-left-color: var(--accent);
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar" id="sidebar">
+    <!-- Sidebar content remains unchanged -->
+  </div>
+
+  <main>
+    <div class="main-header">
+      <h1>Quản lý Chi nhánh</h1>
+      <div class="header-right">
+        <!-- Header content remains unchanged -->
+      </div>
+    </div>
+    
+    <!-- Branch Management Content -->
+    <div class="branch-container">
+      <div class="branch-header">
+        <h2>Danh sách chi nhánh</h2>
+        <button class="btn btn-primary" id="add-branch-btn" onclick="openAddBranchModal()">
+          <i class="fas fa-plus"></i> Thêm chi nhánh
+        </button>
+      </div>
+      
+      <!-- Account Limit Info -->
+      <div class="account-limit-info" id="account-limit-info">
+        <p id="account-limit-text">Đang kiểm tra giới hạn tài khoản...</p>
+      </div>
+      
+      <div class="branch-controls">
+        <div class="search-box">
+          <i class="fas fa-search"></i>
+          <input type="text" id="branch-search" placeholder="Tìm kiếm theo mã, tên..." oninput="filterBranches()">
+        </div>
+      </div>
+      
+      <div class="table-responsive">
+        <table class="branch-table">
+          <thead>
+            <tr>
+              <th>Mã chi nhánh</th>
+              <th>Tên chi nhánh</th>
+              <th>Địa chỉ</th>
+              <th>Tọa độ</th>
+              <th>Trạng thái</th>
+              <th>Hình ảnh</th>
+              <th>Hành động</th>
+            </tr>
+          </thead>
+          <tbody id="branch-list">
+            <!-- Branch data will be loaded here -->
+          </tbody>
+        </table>
+      </div>
+      
+      <div id="empty-branch-state" class="empty-state" style="display: none;">
+        <i class="fas fa-store-slash"></i>
+        <p>Bạn chưa có chi nhánh nào</p>
+        <button class="btn btn-primary" id="add-first-branch-btn" onclick="openAddBranchModal()" style="margin-top: 20px;">
+          <i class="fas fa-plus"></i> Thêm chi nhánh đầu tiên
+        </button>
+      </div>
+    </div>
+  </main>
+  
+  <!-- Add Branch Modal -->
+  <div class="modal" id="add-branch-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Thêm chi nhánh mới</h3>
+        <button class="close-btn" onclick="closeAddBranchModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="branch-code">Mã chi nhánh *</label>
+          <input type="text" id="branch-code" placeholder="VD: CN001">
+        </div>
+        <div class="form-group">
+          <label for="branch-name">Tên chi nhánh *</label>
+          <input type="text" id="branch-name" placeholder="VD: Chi nhánh trung tâm">
+        </div>
+        
+        <div class="form-group">
+          <label for="branch-province">Tỉnh/Thành phố *</label>
+          <select id="branch-province" class="province-select">
+            <option value="">Đang tải tỉnh thành...</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="branch-address-detail">Địa chỉ chi tiết *</label>
+          <input type="text" id="branch-address-detail" placeholder="VD: Số 123, đường Nguyễn Huệ">
+        </div>
+        
+        <div class="form-group">
+          <label for="branch-map-url">Link Google Maps *</label>
+          <div class="extract-coordinates">
+            <input type="text" id="branch-map-url" placeholder="Dán link Google Maps tại đây">
+            <button class="btn" onclick="extractCoordinates()" type="button">Lấy tọa độ</button>
+          </div>
+          <div id="coordinate-result" class="coordinates-result">
+            <p>Chưa có tọa độ</p>
+          </div>
+        </div>
+        
+        <div class="coordinates-container">
+          <div class="form-group">
+            <label for="branch-latitude">Vĩ độ (Latitude)</label>
+            <input type="text" id="branch-latitude" readonly>
+          </div>
+          <div class="form-group">
+            <label for="branch-longitude">Kinh độ (Longitude)</label>
+            <input type="text" id="branch-longitude" readonly>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="branch-status">Trạng thái *</label>
+          <select id="branch-status">
+            <option value="active">Hoạt động</option>
+            <option value="inactive">Ngừng hoạt động</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="branch-image">Hình ảnh chi nhánh</label>
+          <input type="hidden" role="uploadcare-uploader" id="branch-image" data-public-key="238c599562905655c2c8" data-images-only="true" />
+          <div id="image-preview" class="image-preview">
+            <div class="image-placeholder">
+              <i class="fas fa-image"></i>
+              <div>Chưa có hình ảnh</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="form-footer">
+        <button class="btn" onclick="closeAddBranchModal()">Hủy</button>
+        <button class="btn btn-success" onclick="saveBranch()">Lưu</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification Panel -->
+  <div class="notification-panel" id="notification-panel">
+    <!-- Notification content remains unchanged -->
+  </div>
+  
+  <!-- Overlay for notification panel -->
+  <div class="overlay" id="overlay" onclick="toggleNotifications()"></div>
+
+  <!-- Firebase Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  
+  <script>
+    // Initialize Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyBzAdWAVjD_NQP3uglLYOOFWUmDGsylsg0",
+      authDomain: "foodiee-fcdc1.firebaseapp.com",
+      databaseURL: "https://foodiee-fcdc1-default-rtdb.firebaseio.com",
+      projectId: "foodiee-fcdc1",
+      storageBucket: "foodiee-fcdc1.appspot.com",
+      messagingSenderId: "993331259398",
+      appId: "1:993331259398:web:2b922ef5e0519d5e237b87",
+      measurementId: "G-PDT1VE8JL5"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+    const auth = firebase.auth();
+    
+    // DOM elements
+    const branchList = document.getElementById('branch-list');
+    const branchSubmenu = document.getElementById('branch-submenu');
+    const notificationBadge = document.getElementById('notification-badge');
+    const notificationList = document.getElementById('notification-list');
+    const notificationPanel = document.getElementById('notification-panel');
+    const overlay = document.getElementById('overlay');
+    const emptyBranchState = document.getElementById('empty-branch-state');
+    const accountLimitInfo = document.getElementById('account-limit-info');
+    const accountLimitText = document.getElementById('account-limit-text');
+    const addBranchBtn = document.getElementById('add-branch-btn');
+    const addFirstBranchBtn = document.getElementById('add-first-branch-btn');
+    
+    // Sample branch data structure
+    let branches = {};
+    let currentUser = null;
+    let currentUserRole = '';
+    let currentBranchLimit = 0;
+    
+    // Current branch image URL
+    let currentImageUrl = '';
+    
+    // Toggle sidebar
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      sidebar.classList.toggle('closed');
+      localStorage.setItem('sidebarClosed', sidebar.classList.contains('closed'));
+    }
+    
+    // Toggle branch submenu
+    function toggleBranchSubmenu() {
+      const submenu = document.getElementById('branch-submenu');
+      const arrow = document.getElementById('branch-arrow');
+      
+      if (submenu.style.display === 'none' || submenu.style.display === '') {
+        submenu.style.display = 'block';
+        submenu.classList.add('show');
+        arrow.classList.remove('fa-chevron-down');
+        arrow.classList.add('fa-chevron-up');
+      } else {
+        submenu.style.display = 'none';
+        submenu.classList.remove('show');
+        arrow.classList.remove('fa-chevron-up');
+        arrow.classList.add('fa-chevron-down');
+      }
+    }
+    
+    // Toggle notifications panel
+    function toggleNotifications() {
+      notificationPanel.classList.toggle('open');
+      overlay.classList.toggle('show');
+      
+      // Mark all notifications as read when opening panel
+      if (notificationPanel.classList.contains('open')) {
+        markNotificationsAsRead();
+      }
+    }
+
+    // Format time
+    function formatTime(timestamp) {
+      const date = new Date(timestamp);
+      return date.toLocaleString('vi-VN', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+
+    firebase.auth().onAuthStateChanged((user) => {
+      if (user) {
+        currentUser = user;
+        const uid = user.uid;
+        const userRef = firebase.database().ref('users/' + uid);
+        userRef.once('value').then((snapshot) => {
+          const data = snapshot.val();
+          if (!data) return;
+
+          const avatarUrl = data.avatarUrl || '';
+          const displayName = data.displayName || user.displayName || user.email.split('@')[0];
+
+          // Gán tên
+          const nameEl = document.getElementById('header-username');
+          if (nameEl) nameEl.textContent = displayName;
+
+          // Gán avatar
+          const avatarEl = document.getElementById('header-avatar');
+          if (avatarEl) {
+            if (avatarUrl) {
+              avatarEl.style.backgroundImage = `url(${avatarUrl})`;
+              avatarEl.style.backgroundSize = 'cover';
+              avatarEl.style.backgroundPosition = 'center';
+              avatarEl.textContent = '';
+            } else {
+              avatarEl.style.backgroundImage = '';
+              avatarEl.textContent = displayName.charAt(0).toUpperCase();
+            }
+          }
+          
+          // Lấy thông tin role từ info_user
+          if (data.info_user && data.info_user.role) {
+            currentUserRole = data.info_user.role;
+            updateAccountLimitInfo();
+          }
+          
+          // Load branches and notifications
+          loadBranches();
+          loadNotifications();
+          
+          // Load provinces
+          loadProvinces();
+        });
+      } else {
+        // Nếu chưa đăng nhập thì chuyển về trang login
+        window.location.href = 'index.html';
+      }
+    });
+    
+    // Load provinces from API
+    function loadProvinces() {
+      fetch('https://provinces.open-api.vn/api/?depth=1')
+        .then(response => response.json())
+        .then(data => {
+          const provinceSelect = document.getElementById('branch-province');
+          provinceSelect.innerHTML = '<option value="">Chọn tỉnh/thành phố</option>';
+          
+          data.forEach(province => {
+            const option = document.createElement('option');
+            option.value = province.name;
+            option.textContent = province.name;
+            provinceSelect.appendChild(option);
+          });
+        })
+        .catch(error => {
+          console.error('Lỗi khi tải tỉnh thành:', error);
+          const provinceSelect = document.getElementById('branch-province');
+          provinceSelect.innerHTML = '<option value="">Không thể tải tỉnh thành</option>';
+        });
+    }
+    
+    // Extract coordinates from Google Maps URL
+    function extractCoordinates() {
+      const url = document.getElementById('branch-map-url').value;
+      const regex = /@(-?\d+\.\d+),(-?\d+\.\d+)/;
+      const match = url.match(regex);
+      const resultDiv = document.getElementById('coordinate-result');
+      
+      if (match) {
+        const latitude = match[1];
+        const longitude = match[2];
+        
+        document.getElementById('branch-latitude').value = latitude;
+        document.getElementById('branch-longitude').value = longitude;
+        
+        resultDiv.innerHTML = `
+          <p><strong>Tọa độ trích xuất thành công!</strong></p>
+          <p>Vĩ độ: ${latitude}</p>
+          <p>Kinh độ: ${longitude}</p>
+        `;
+        resultDiv.className = 'coordinates-result success';
+      } else {
+        resultDiv.innerHTML = `
+          <p><strong>Không tìm thấy tọa độ trong URL</strong></p>
+          <p>Vui lòng kiểm tra lại URL Google Maps</p>
+          <p>Định dạng đúng: https://www.google.com/maps/@latitude,longitude,z</p>
+        `;
+        resultDiv.className = 'coordinates-result error';
+      }
+    }
+    
+    // Update account limit info
+    function updateAccountLimitInfo() {
+      let maxBranches = 0;
+      let branchType = '';
+      
+      switch(currentUserRole) {
+        case 'admin base':
+          maxBranches = 1;
+          branchType = 'Admin Base';
+          break;
+        case 'admin pro':
+          maxBranches = 5;
+          branchType = 'Admin Pro';
+          break;
+        case 'admin limited':
+          maxBranches = Infinity;
+          branchType = 'Admin Limited';
+          break;
+        default:
+          maxBranches = 0;
+          branchType = 'Không xác định';
+      }
+      
+      currentBranchLimit = maxBranches;
+      
+      const currentBranchCount = Object.keys(branches).length;
+      let limitText = '';
+      
+      if (maxBranches === Infinity) {
+        limitText = `Tài khoản ${branchType}: Bạn có thể tạo không giới hạn chi nhánh`;
+      } else {
+        const remaining = maxBranches - currentBranchCount;
+        const reachedLimit = currentBranchCount >= maxBranches;
+        
+        limitText = `
+          Tài khoản ${branchType}: 
+          Bạn có thể tạo tối đa ${maxBranches} chi nhánh.
+          Hiện tại bạn đã tạo ${currentBranchCount} chi nhánh.
+        `;
+        
+        if (reachedLimit) {
+          limitText += `<p class="limit-reached">Bạn đã đạt giới hạn tối đa!</p>`;
+        } else {
+          limitText += `<p>Bạn còn có thể tạo ${remaining} chi nhánh.</p>`;
+        }
+      }
+      
+      accountLimitText.innerHTML = limitText;
+      
+      // Disable buttons if limit reached
+      const reachedLimit = currentBranchCount >= maxBranches && maxBranches !== Infinity;
+      addBranchBtn.disabled = reachedLimit;
+      addFirstBranchBtn.disabled = reachedLimit;
+      
+      if (reachedLimit) {
+        addBranchBtn.classList.add('disabled');
+        addFirstBranchBtn.classList.add('disabled');
+      } else {
+        addBranchBtn.classList.remove('disabled');
+        addFirstBranchBtn.classList.remove('disabled');
+      }
+    }
+    
+    // Modal functions
+    function openAddBranchModal() {
+      if (!currentUser) {
+        showToast('Bạn chưa đăng nhập!', 'error');
+        return;
+      }
+      
+      // Check branch limit
+      const currentBranchCount = Object.keys(branches).length;
+      const maxBranches = currentBranchLimit;
+      
+      if (maxBranches !== Infinity && currentBranchCount >= maxBranches) {
+        showToast(`Bạn đã đạt giới hạn tối đa ${maxBranches} chi nhánh!`, 'error');
+        return;
+      }
+      
+      document.getElementById('add-branch-modal').style.display = 'flex';
+      document.getElementById('branch-code').focus();
+      
+      // Reset fields
+      document.getElementById('branch-province').selectedIndex = 0;
+      document.getElementById('branch-address-detail').value = '';
+      document.getElementById('branch-map-url').value = '';
+      document.getElementById('branch-latitude').value = '';
+      document.getElementById('branch-longitude').value = '';
+      document.getElementById('coordinate-result').innerHTML = '<p>Chưa có tọa độ</p>';
+      document.getElementById('coordinate-result').className = 'coordinates-result';
+      
+      // Reset image
+      currentImageUrl = '';
+      updateImagePreview();
+      
+      // Initialize Uploadcare widget
+      if (!uploadcareWidget) {
+        uploadcareWidget = uploadcare.Widget('#branch-image');
+        
+        uploadcareWidget.onChange(function(file) {
+          if (file) {
+            file.done(function(info) {
+              currentImageUrl = info.cdnUrl;
+              updateImagePreview();
+            });
+          } else {
+            currentImageUrl = '';
+            updateImagePreview();
+          }
+        });
+      } else {
+        uploadcareWidget.value(null);
+      }
+    }
+    
+    function closeAddBranchModal() {
+      document.getElementById('add-branch-modal').style.display = 'none';
+
+      document.getElementById('branch-code').value = '';
+      document.getElementById('branch-name').value = '';
+      document.getElementById('branch-province').selectedIndex = 0;
+      document.getElementById('branch-address-detail').value = '';
+      document.getElementById('branch-map-url').value = '';
+      document.getElementById('branch-latitude').value = '';
+      document.getElementById('branch-longitude').value = '';
+      document.getElementById('coordinate-result').innerHTML = '<p>Chưa có tọa độ</p>';
+      document.getElementById('coordinate-result').className = 'coordinates-result';
+      document.getElementById('branch-status').value = 'active';
+
+      document.getElementById('branch-code').disabled = false;
+      document.querySelector('.btn-success').textContent = 'Lưu';
+      document.querySelector('.btn-success').onclick = saveBranch;
+      
+      // Reset image
+      currentImageUrl = '';
+      updateImagePreview();
+      
+      // Reset widget
+      if (uploadcareWidget) {
+        uploadcareWidget.value(null);
+      }
+    }
+    
+    // Update image preview
+    function updateImagePreview() {
+      const preview = document.getElementById('image-preview');
+      
+      if (currentImageUrl) {
+        preview.innerHTML = `<img src="${currentImageUrl}" alt="Preview" />`;
+      } else {
+        preview.innerHTML = `
+          <div class="image-placeholder">
+            <i class="fas fa-image"></i>
+            <div>Chưa có hình ảnh</div>
+          </div>
+        `;
+      }
+    }
+    
+    // Save branch to Firebase under user's node
+    function saveBranch() {
+      if (!currentUser) {
+        showToast('Bạn chưa đăng nhập!', 'error');
+        return;
+      }
+      
+      // Check branch limit
+      const currentBranchCount = Object.keys(branches).length;
+      const maxBranches = currentBranchLimit;
+      
+      if (maxBranches !== Infinity && currentBranchCount >= maxBranches) {
+        showToast(`Bạn đã đạt giới hạn tối đa ${maxBranches} chi nhánh!`, 'error');
+        return;
+      }
+      
+      const code = document.getElementById('branch-code').value.trim();
+      const name = document.getElementById('branch-name').value.trim();
+      const province = document.getElementById('branch-province').value.trim();
+      const addressDetail = document.getElementById('branch-address-detail').value.trim();
+      const mapUrl = document.getElementById('branch-map-url').value.trim();
+      const latitude = document.getElementById('branch-latitude').value.trim();
+      const longitude = document.getElementById('branch-longitude').value.trim();
+      const status = document.getElementById('branch-status').value;
+      
+      if (!code || !name || !province || !addressDetail || !mapUrl || !latitude || !longitude) {
+        showToast('Vui lòng điền đầy đủ thông tin và lấy tọa độ', 'error');
+        return;
+      }
+      
+      const branchData = {
+        code: code,
+        name: name,
+        province: province,
+        address_detail: addressDetail,
+        map_url: mapUrl,
+        latitude: latitude,
+        longitude: longitude,
+        status: status,
+        imageUrl: currentImageUrl || '',
+        createdAt: new Date().toISOString()
+      };
+      
+      // Save to Firebase under the user's node
+      const branchRef = database.ref(`users/${currentUser.uid}/branches/${code}`);
+      branchRef.set(branchData)
+        .then(() => {
+          closeAddBranchModal();
+          loadBranches();
+          showToast('Thêm chi nhánh thành công!', 'success');
+          
+          // Add notification
+          addNotification(
+            "Thêm chi nhánh mới",
+            `Chi nhánh ${name} (${code}) đã được thêm vào hệ thống`,
+            "branch_add",
+            "success"
+          );
+        })
+        .catch(error => {
+          console.error('Error saving branch:', error);
+          showToast('Có lỗi xảy ra: ' + error.message, 'error');
+        });
+    }
+    
+    // Load branches from Firebase for current user
+    function loadBranches() {
+      if (!currentUser) return;
+      
+      const branchesRef = database.ref(`users/${currentUser.uid}/branches`);
+      
+      branchesRef.once('value')
+        .then(snapshot => {
+          branches = snapshot.val() || {};
+          renderBranchList();
+          updateBranchSubmenu();
+          updateAccountLimitInfo();
+          
+          // Hiển thị trạng thái trống nếu cần
+          if (Object.keys(branches).length === 0) {
+            emptyBranchState.style.display = 'block';
+            branchList.style.display = 'none';
+          } else {
+            emptyBranchState.style.display = 'none';
+            branchList.style.display = 'table-row-group';
+          }
+        })
+        .catch(error => {
+          console.error('Lỗi load chi nhánh:', error);
+          showToast('Lỗi khi tải dữ liệu chi nhánh', 'error');
+        });
+    }
+    
+    // Render branch list
+    function renderBranchList() {
+      branchList.innerHTML = '';
+
+      Object.keys(branches).forEach(key => {
+        const branch = branches[key];
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${branch.code}</td>
+          <td>${branch.name}</td>
+          <td>${branch.address_detail ? branch.address_detail + ', ' + branch.province : branch.address || ''}</td>
+          <td>${branch.latitude ? branch.latitude + ', ' + branch.longitude : 'Chưa có'}</td>
+          <td>
+            <span class="status-badge ${branch.status === 'active' ? 'status-active' : 'status-inactive'}">
+              ${branch.status === 'active' ? 'Hoạt động' : 'Ngừng hoạt động'}
+            </span>
+          </td>
+          <td>
+            ${branch.imageUrl ? 
+              `<img src="${branch.imageUrl}" alt="${branch.name}" style="max-width: 60px; max-height: 40px; border-radius: 4px;">` : 
+              '<span>Chưa có ảnh</span>'}
+          </td>
+          <td class="action-buttons">
+            <button class="action-btn edit" title="Chỉnh sửa" onclick="editBranch('${branch.code}')">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button class="action-btn ${branch.status === 'active' ? 'disabled' : 'delete'}" 
+                     title="${branch.status === 'active' ? 'Không thể xóa chi nhánh đang hoạt động' : 'Xóa'}" 
+                     onclick="${branch.status === 'inactive' ? `deleteBranch('${branch.code}')` : 'showToast("Không thể xóa chi nhánh đang hoạt động", "warning")'}">
+              <i class="fas fa-trash"></i>
+            </button>
+          </td>
+        `;
+
+        branchList.appendChild(row);
+      });
+    }
+    
+    // Edit branch function
+    function editBranch(code) {
+      const branch = branches[code];
+      if (!branch) return;
+
+      // Mở modal
+      openAddBranchModal();
+
+      // Điền dữ liệu vào form
+      document.getElementById('branch-code').value = branch.code;
+      document.getElementById('branch-name').value = branch.name;
+      
+      // Điền dữ liệu tỉnh/thành phố
+      const provinceSelect = document.getElementById('branch-province');
+      for (let i = 0; i < provinceSelect.options.length; i++) {
+        if (provinceSelect.options[i].value === branch.province) {
+          provinceSelect.selectedIndex = i;
+          break;
+        }
+      }
+      
+      document.getElementById('branch-address-detail').value = branch.address_detail || '';
+      document.getElementById('branch-map-url').value = branch.map_url || '';
+      document.getElementById('branch-latitude').value = branch.latitude || '';
+      document.getElementById('branch-longitude').value = branch.longitude || '';
+      document.getElementById('branch-status').value = branch.status || 'active';
+
+      // Update coordinate result display
+      const resultDiv = document.getElementById('coordinate-result');
+      if (branch.latitude && branch.longitude) {
+        resultDiv.innerHTML = `
+          <p><strong>Tọa độ hiện tại:</strong></p>
+          <p>Vĩ độ: ${branch.latitude}</p>
+          <p>Kinh độ: ${branch.longitude}</p>
+        `;
+        resultDiv.className = 'coordinates-result success';
+      } else {
+        resultDiv.innerHTML = '<p>Chưa có tọa độ</p>';
+        resultDiv.className = 'coordinates-result';
+      }
+
+      // Set current image
+      currentImageUrl = branch.imageUrl || '';
+      updateImagePreview();
+
+      // Disable chỉnh mã
+      document.getElementById('branch-code').disabled = true;
+
+      // Đổi nút lưu
+      const saveBtn = document.querySelector('.btn-success');
+      saveBtn.textContent = 'Cập nhật';
+      saveBtn.onclick = () => {
+        const updatedData = {
+          name: document.getElementById('branch-name').value.trim(),
+          province: document.getElementById('branch-province').value.trim(),
+          address_detail: document.getElementById('branch-address-detail').value.trim(),
+          map_url: document.getElementById('branch-map-url').value.trim(),
+          latitude: document.getElementById('branch-latitude').value.trim(),
+          longitude: document.getElementById('branch-longitude').value.trim(),
+          status: document.getElementById('branch-status').value,
+          imageUrl: currentImageUrl || '',
+          updatedAt: new Date().toISOString()
+        };
+
+        if (!currentUser) {
+          showToast('Bạn chưa đăng nhập!', 'error');
+          return;
+        }
+
+        database.ref(`users/${currentUser.uid}/branches/${code}`).update(updatedData)
+          .then(() => {
+            closeAddBranchModal();
+            loadBranches();
+            showToast('Cập nhật chi nhánh thành công!', 'success');
+            
+            // Add notification
+            addNotification(
+              "Cập nhật chi nhánh",
+              `Thông tin chi nhánh ${updatedData.name} (${code}) đã được cập nhật`,
+              "branch_edit",
+              "info"
+            );
+          })
+          .catch(error => {
+            console.error('Update error:', error);
+            showToast('Lỗi khi cập nhật: ' + error.message, 'error');
+          });
+      };
+    }
+    
+    // Update branch submenu
+    function updateBranchSubmenu() {
+      branchSubmenu.innerHTML = '';
+      
+      Object.keys(branches).forEach(key => {
+        const branch = branches[key];
+        
+        const li = document.createElement('li');
+        li.innerHTML = `
+          <a href="branch-detail.html?code=${branch.code}">
+            <i class="fas fa-store"></i>
+            <span class="link-text">${branch.name}</span>
+          </a>
+        `;
+        
+        branchSubmenu.appendChild(li);
+      });
+      
+      // Show submenu if it has items
+      if (Object.keys(branches).length > 0) {
+        branchSubmenu.style.display = 'block';
+        branchSubmenu.classList.add('show');
+      }
+    }
+    
+    // Filter branches
+    function filterBranches() {
+      const searchTerm = document.getElementById('branch-search').value.toLowerCase();
+      const rows = branchList.getElementsByTagName('tr');
+      
+      for (let i = 0; i < rows.length; i++) {
+        const code = rows[i].cells[0].textContent.toLowerCase();
+        const name = rows[i].cells[1].textContent.toLowerCase();
+        
+        if (code.includes(searchTerm) || name.includes(searchTerm)) {
+          rows[i].style.display = '';
+        } else {
+          rows[i].style.display = 'none';
+        }
+      }
+    }
+    
+    // Delete branch (only inactive branches)
+    function deleteBranch(code) {
+      if (!currentUser) {
+        showToast('Bạn chưa đăng nhập!', 'error');
+        return;
+      }
+      
+      const branch = branches[code];
+      
+      // Kiểm tra trạng thái chi nhánh
+      if (branch.status === 'active') {
+        showToast('Không thể xóa chi nhánh đang hoạt động!', 'warning');
+        return;
+      }
+      
+      if (confirm(`Bạn có chắc chắn muốn xóa chi nhánh ${branch.name} (${code})?`)) {
+        database.ref(`users/${currentUser.uid}/branches/${code}`).remove()
+          .then(() => {
+            loadBranches();
+            showToast('Đã xóa chi nhánh thành công!', 'success');
+            
+            // Add notification
+            addNotification(
+              "Xóa chi nhánh",
+              `Chi nhánh ${branch.name} (${code}) đã bị xóa khỏi hệ thống`,
+              "branch_delete",
+              "warning"
+            );
+          })
+          .catch(error => {
+            console.error('Error deleting branch:', error);
+            showToast('Có lỗi xảy ra: ' + error.message, 'error');
+          });
+      }
+    }
+    
+    // Show toast notification
+    function showToast(message, type) {
+      // Remove existing toasts
+      const existingToasts = document.querySelectorAll('.toast');
+      existingToasts.forEach(toast => toast.remove());
+      
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.innerHTML = `
+        <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-exclamation-triangle'}"></i>
+        <span>${message}</span>
+      `;
+      
+      document.body.appendChild(toast);
+      
+      // Auto remove after 3 seconds
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+    
+    // Add notification to the list
+    function addNotification(title, content, type, iconType) {
+      if (!currentUser) return;
+      
+      const notificationRef = database.ref(`users/${currentUser.uid}/notifications`).push();
+      const timestamp = new Date().getTime();
+      
+      const notificationData = {
+        title: title,
+        content: content,
+        type: type,
+        iconType: iconType,
+        timestamp: timestamp,
+        read: false
+      };
+      
+      notificationRef.set(notificationData)
+        .then(() => {
+          loadNotifications();
+        })
+        .catch(error => {
+          console.error('Error adding notification:', error);
+        });
+    }
+    
+    // Load notifications for current user
+    function loadNotifications() {
+      if (!currentUser) return;
+      
+      const notificationsRef = database.ref(`users/${currentUser.uid}/notifications`).orderByChild('timestamp').limitToLast(20);
+      
+      notificationsRef.on('value', snapshot => {
+        const notifications = snapshot.val() || {};
+        let unreadCount = 0;
+        
+        // Clear existing notifications
+        notificationList.innerHTML = '';
+        
+        // Convert to array and sort by timestamp
+        const notificationArray = Object.entries(notifications).map(([key, value]) => {
+          return { id: key, ...value };
+        });
+        
+        // Sort by timestamp (newest first)
+        notificationArray.sort((a, b) => b.timestamp - a.timestamp);
+        
+        // Render each notification
+        notificationArray.forEach(notification => {
+          if (!notification.read) unreadCount++;
+          
+          const notificationItem = document.createElement('div');
+          notificationItem.className = 'notification-item';
+          notificationItem.dataset.id = notification.id;
+          
+          let iconClass = '';
+          let iconColor = '';
+          
+          switch (notification.iconType) {
+            case 'success':
+              iconClass = 'fa-check-circle';
+              iconColor = 'var(--success)';
+              break;
+            case 'error':
+              iconClass = 'fa-exclamation-circle';
+              iconColor = 'var(--accent)';
+              break;
+            case 'warning':
+              iconClass = 'fa-exclamation-triangle';
+              iconColor = 'var(--warning)';
+              break;
+            default:
+              iconClass = 'fa-info-circle';
+              iconColor = 'var(--secondary)';
+          }
+          
+          notificationItem.innerHTML = `
+            <div class="notification-title">
+              <i class="fas ${iconClass}" style="color: ${iconColor}"></i>
+              ${notification.title}
+            </div>
+            <div class="notification-content">${notification.content}</div>
+            <div class="notification-time">${formatTime(notification.timestamp)}</div>
+          `;
+          
+          notificationList.appendChild(notificationItem);
+        });
+        
+        // Update badge
+        notificationBadge.textContent = unreadCount;
+      });
+    }
+    
+    // Mark all notifications as read
+    function markNotificationsAsRead() {
+      if (!currentUser) return;
+      
+      const notificationsRef = database.ref(`users/${currentUser.uid}/notifications`);
+      
+      notificationsRef.once('value')
+        .then(snapshot => {
+          const notifications = snapshot.val() || {};
+          const updates = {};
+          
+          Object.keys(notifications).forEach(key => {
+            if (!notifications[key].read) {
+              updates[`${key}/read`] = true;
+            }
+          });
+          
+          if (Object.keys(updates).length > 0) {
+            notificationsRef.update(updates)
+              .then(() => {
+                // Update badge to 0
+                notificationBadge.textContent = '0';
+              })
+              .catch(error => {
+                console.error('Error marking notifications as read:', error);
+              });
+          }
+        });
+    }
+    
+    // Clear all notifications for current user
+    function clearNotifications() {
+      if (!currentUser) return;
+      
+      if (confirm('Bạn có chắc chắn muốn xóa tất cả thông báo?')) {
+        database.ref(`users/${currentUser.uid}/notifications`).remove()
+          .then(() => {
+            showToast('Đã xóa tất cả thông báo', 'success');
+          })
+          .catch(error => {
+            console.error('Error clearing notifications:', error);
+            showToast('Lỗi khi xóa thông báo: ' + error.message, 'error');
+          });
+      }
+    }
+    
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      if (localStorage.getItem('sidebarClosed') === 'true') {
+        document.getElementById('sidebar').classList.add('closed');
+      }
+    });
+  </script>
+</body>
+</html>

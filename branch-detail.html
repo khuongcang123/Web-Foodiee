@@ -1,0 +1,3467 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Quản lý Chi nhánh - Foodiee Management</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --primary: #2c3e50;
+      --secondary: #3498db;
+      --accent: #e74c3c;
+      --light: #ecf0f1;
+      --dark: #2c3e50;
+      --success: #2ecc71;
+      --warning: #f39c12;
+      --gray: #95a5a6;
+      --sidebar-width: 250px;
+      --sidebar-collapsed: 70px;
+      --transition-speed: 0.3s;
+    }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: #f5f7fa;
+      color: #333;
+      overflow-x: hidden;
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* Header */
+    .main-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 0;
+      border-bottom: 2px solid var(--secondary);
+      margin-bottom: 30px;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .notification-icon {
+      position: relative;
+      cursor: pointer;
+      font-size: 1.3rem;
+      color: var(--primary);
+      transition: transform 0.3s;
+    }
+
+    .notification-icon:hover {
+      transform: scale(1.1);
+      color: var(--accent);
+    }
+
+    .notification-badge {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      background: var(--accent);
+      color: white;
+      font-size: 0.7rem;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .user-profile {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+    }
+
+    .avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--secondary), var(--primary));
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      font-weight: bold;
+      font-size: 1.2rem;
+      background-size: cover;
+      background-position: center;
+    }
+
+    .user-name {
+      font-weight: 500;
+      color: var(--primary);
+    }
+
+    /* Sidebar */
+    .sidebar {
+      background: linear-gradient(135deg, var(--primary), #1a2530);
+      color: white;
+      width: var(--sidebar-width);
+      height: 100vh;
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 1000;
+      overflow-y: auto;
+      transition: all var(--transition-speed) ease;
+      box-shadow: 3px 0 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .sidebar.closed {
+      width: var(--sidebar-collapsed);
+    }
+
+    .toggle-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: white;
+      width: 100%;
+      padding: 15px;
+      cursor: pointer;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      transition: background 0.3s;
+    }
+
+    .toggle-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .toggle-btn i {
+      font-size: 1.5rem;
+      margin-right: 15px;
+    }
+
+    .sidebar.closed .toggle-btn i {
+      margin-right: 0;
+    }
+
+    .nav-menu {
+      padding: 15px 0;
+    }
+
+    .nav-menu ul {
+      list-style: none;
+    }
+
+    .nav-menu ul li {
+      position: relative;
+    }
+
+    .nav-menu ul li a {
+      color: rgba(255, 255, 255, 0.8);
+      text-decoration: none;
+      padding: 15px 20px;
+      display: flex;
+      align-items: center;
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .nav-menu ul li a:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+    }
+
+    .nav-menu ul li a.active {
+      background: rgba(255, 255, 255, 0.15);
+      color: white;
+      border-left: 4px solid var(--accent);
+    }
+
+    .nav-menu ul li a i {
+      font-size: 1.2rem;
+      min-width: 30px;
+      text-align: center;
+      transition: transform 0.3s;
+    }
+
+    .link-text {
+      margin-left: 15px;
+      transition: opacity var(--transition-speed), margin var(--transition-speed);
+      white-space: nowrap;
+    }
+
+    .sidebar.closed .link-text {
+      opacity: 0;
+      margin-left: -10px;
+      pointer-events: none;
+    }
+
+    /* Submenu */
+    .submenu {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease-out;
+      background: rgba(0, 0, 0, 0.15);
+      padding-left: 0;
+    }
+
+    .submenu.show {
+      max-height: 500px;
+    }
+
+    .submenu li a {
+      padding: 12px 20px 12px 60px !important;
+      font-size: 0.9rem;
+    }
+
+    .submenu li a i {
+      font-size: 0.9rem;
+    }
+
+    /* Fix submenu khi sidebar đóng */
+    .sidebar.closed .submenu {
+      position: absolute;
+      left: 100%;
+      top: 0;
+      min-width: 200px;
+      background: #2c3e50;
+      border-radius: 0 8px 8px 0;
+      box-shadow: 3px 3px 10px rgba(0,0,0,0.2);
+      z-index: 1001;
+    }
+
+    .sidebar.closed .submenu.show {
+      max-height: none;
+      display: block;
+    }
+
+    .sidebar.closed .submenu li a {
+      padding: 12px 15px !important;
+    }
+
+    .sidebar.closed .submenu .link-text {
+      opacity: 1;
+      margin-left: 10px;
+      pointer-events: auto;
+    }
+
+    /* Main content */
+    main {
+      flex: 1;
+      padding: 30px;
+      margin-left: var(--sidebar-width);
+      transition: margin var(--transition-speed);
+      overflow-y: auto;
+      max-height: 100vh;
+    }
+
+    .sidebar.closed + main {
+      margin-left: var(--sidebar-collapsed);
+    }
+
+    h1 {
+      color: var(--primary);
+      font-weight: 600;
+    }
+    
+    /* Tab styles */
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid #ddd;
+      margin-bottom: 20px;
+    }
+    
+    .tab {
+      padding: 12px 24px;
+      cursor: pointer;
+      font-weight: 500;
+      color: var(--dark);
+      border-bottom: 3px solid transparent;
+      transition: all 0.3s;
+    }
+    
+    .tab.active {
+      border-bottom: 3px solid var(--secondary);
+      color: var(--secondary);
+    }
+    
+    .tab-content {
+      display: none;
+    }
+    
+    .tab-content.active {
+      display: block;
+    }
+    
+    /* Branch Management Styles */
+    .branch-container {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+      overflow: hidden;
+      margin-bottom: 30px;
+    }
+    
+    .branch-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .btn {
+      padding: 10px 20px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.3s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .btn-primary {
+      background: var(--secondary);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: #2980b9;
+    }
+    
+    .btn-success {
+      background: var(--success);
+      color: white;
+    }
+    
+    .btn-success:hover {
+      background: #27ae60;
+    }
+    
+    .btn-danger {
+      background: var(--accent);
+      color: white;
+    }
+    
+    .btn-danger:hover {
+      background: #c0392b;
+    }
+    
+    .branch-controls {
+      display: flex;
+      gap: 15px;
+      padding: 20px;
+      background: #f8f9fa;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .search-box {
+      flex: 1;
+      position: relative;
+    }
+    
+    .search-box input {
+      width: 100%;
+      padding: 10px 15px 10px 40px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 1rem;
+      transition: all 0.3s;
+    }
+    
+    .search-box input:focus {
+      outline: none;
+      border-color: var(--secondary);
+      box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+    }
+    
+    .search-box i {
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--gray);
+    }
+    
+    .branch-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    
+    .branch-table th {
+      background: var(--light);
+      padding: 15px;
+      text-align: left;
+      color: var(--primary);
+      font-weight: 600;
+      border-bottom: 2px solid #ddd;
+    }
+    
+    .branch-table td {
+      padding: 15px;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .branch-table tr:hover {
+      background: #f9f9f9;
+    }
+    
+    .status-badge {
+      padding: 5px 10px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+    
+    .status-active {
+      background: rgba(46, 204, 113, 0.15);
+      color: var(--success);
+    }
+    
+    .status-inactive {
+      background: rgba(231, 76, 60, 0.15);
+      color: var(--accent);
+    }
+    
+    .status-reserved {
+      background: rgba(243, 156, 18, 0.15);
+      color: var(--warning);
+    }
+    
+    .status-disabled {
+      background: rgba(149, 165, 166, 0.15);
+      color: var(--gray);
+    }
+    
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+    }
+    
+    .action-btn {
+      padding: 5px 10px;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .action-btn.edit {
+      background: rgba(52, 152, 219, 0.15);
+      color: var(--secondary);
+    }
+    
+    .action-btn.edit:hover {
+      background: var(--secondary);
+      color: white;
+    }
+    
+    .action-btn.delete {
+      background: rgba(231, 76, 60, 0.15);
+      color: var(--accent);
+    }
+    
+    .action-btn.delete:hover {
+      background: var(--accent);
+      color: white;
+    }
+
+    .action-btn.disabled {
+      background: rgba(149, 165, 166, 0.15);
+      color: var(--gray);
+      cursor: not-allowed;
+    }
+    
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 2000;
+      justify-content: center;
+      align-items: center;
+      overflow: auto;
+    }
+    
+    .modal-content {
+      background: white;
+      width: 90%;
+      max-width: 500px;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      animation: modalAppear 0.3s ease;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    @keyframes modalAppear {
+      from { transform: translateY(-20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    
+    .modal-header {
+      padding: 20px;
+      background: var(--primary);
+      color: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    
+    .modal-header h3 {
+      font-weight: 500;
+    }
+    
+    .close-btn {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 1.5rem;
+      cursor: pointer;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: background 0.3s;
+    }
+    
+    .close-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+    
+    .modal-body {
+      padding: 20px;
+      overflow-y: auto;
+      flex: 1;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: var(--dark);
+    }
+    
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 12px 15px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 1rem;
+      transition: all 0.3s;
+    }
+    
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: var(--secondary);
+      box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+    }
+    
+    .form-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      padding: 20px;
+      border-top: 1px solid #eee;
+      flex-shrink: 0;
+    }
+    
+    /* Toast notification */
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      padding: 15px 25px;
+      border-radius: 8px;
+      color: white;
+      font-weight: 500;
+      z-index: 3000;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+      animation: toastSlideIn 0.3s ease-out;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .toast.error {
+      background: var(--accent);
+    }
+    
+    .toast.success {
+      background: var(--success);
+    }
+    
+    .toast.warning {
+      background: var(--warning);
+    }
+    
+    @keyframes toastSlideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    /* Notification Panel */
+    .notification-panel {
+      position: fixed;
+      top: 0;
+      right: -400px;
+      width: 380px;
+      height: 100vh;
+      background: white;
+      box-shadow: -5px 0 15px rgba(0,0,0,0.1);
+      z-index: 2500;
+      transition: right 0.3s ease;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .notification-panel.open {
+      right: 0;
+    }
+    
+    .notification-header {
+      background: var(--primary);
+      color: white;
+      padding: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .notification-header h3 {
+      font-size: 1.2rem;
+      font-weight: 500;
+    }
+    
+    .close-notifications {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+    
+    .notification-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 15px;
+    }
+    
+    .notification-item {
+      padding: 15px;
+      border-bottom: 1px solid #eee;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    
+    .notification-item:hover {
+      background: #f9f9f9;
+    }
+    
+    .notification-title {
+      font-weight: 600;
+      margin-bottom: 5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .notification-title i {
+      font-size: 0.9rem;
+    }
+    
+    .notification-content {
+      font-size: 0.9rem;
+      color: #555;
+      margin-bottom: 5px;
+    }
+    
+    .notification-time {
+      font-size: 0.8rem;
+      color: var(--gray);
+      text-align: right;
+    }
+    
+    .notification-footer {
+      padding: 15px;
+      text-align: center;
+      border-top: 1px solid #eee;
+    }
+    
+    .clear-notifications {
+      background: none;
+      border: none;
+      color: var(--accent);
+      cursor: pointer;
+      font-weight: 500;
+    }
+    
+    .overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.4);
+      z-index: 2000;
+    }
+    
+    .overlay.show {
+      display: block;
+    }
+    
+    /* Empty state */
+    .empty-state {
+      padding: 30px;
+      text-align: center;
+      color: var(--gray);
+    }
+    
+    .empty-state i {
+      font-size: 48px;
+      margin-bottom: 15px;
+      color: #e0e0e0;
+    }
+    
+    .empty-state p {
+      font-size: 18px;
+    }
+    
+    /* Account limit info */
+    .account-limit-info, 
+    #warehouse-limit-info, 
+    #shift-limit-info {
+      display: none;
+    }
+    
+    /* Thêm cảnh báo giới hạn mới */
+    .limit-warning {
+      display: none;
+      background-color: #fff8e1;
+      border-left: 4px solid #f39c12;
+      border-radius: 4px;
+      padding: 12px 15px;
+      margin: 15px 0;
+      font-size: 14px;
+      animation: pulseWarning 2s infinite;
+    }
+    
+    .limit-warning.show {
+      display: block;
+    }
+    
+    .limit-warning i {
+      color: #f39c12;
+      margin-right: 8px;
+    }
+    
+    @keyframes pulseWarning {
+      0% { box-shadow: 0 0 0 0 rgba(243, 156, 18, 0.4); }
+      70% { box-shadow: 0 0 0 8px rgba(243, 156, 18, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(243, 156, 18, 0); }
+    }
+    
+    /* Stats cards */
+    .stats-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+    
+    .stat-card {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+      padding: 20px;
+      text-align: center;
+    }
+    
+    .stat-card h3 {
+      font-size: 1.5rem;
+      margin-bottom: 10px;
+      color: var(--primary);
+    }
+    
+    .stat-card p {
+      color: var(--gray);
+      font-weight: 500;
+    }
+    
+    /* Charts container */
+    .charts-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-top: 30px;
+    }
+    
+    .chart-card {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+      padding: 20px;
+    }
+    
+    .chart-card h3 {
+      margin-top: 0;
+      color: var(--primary);
+      text-align: center;
+    }
+    
+    /* Zone Card Styles */
+    .zones-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+    }
+    
+    .zone-card {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+      overflow: hidden;
+    }
+    
+    .zone-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px;
+      background: #f8f9fa;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .zone-title {
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+    
+    .zone-status {
+      font-size: 0.9rem;
+      padding: 3px 8px;
+      border-radius: 4px;
+    }
+    
+    .zone-status.active {
+      background: rgba(46, 204, 113, 0.15);
+      color: var(--success);
+    }
+    
+    .zone-status.inactive {
+      background: rgba(231, 76, 60, 0.15);
+      color: var(--accent);
+    }
+    
+    .zone-actions {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .tables-container {
+      padding: 15px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 15px;
+    }
+    
+    .table-card {
+      border-radius: 8px;
+      padding: 15px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+    }
+    
+    .table-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .table-card.empty {
+      background: #e8f5e9; /* Màu xanh nhạt */
+      border: 2px solid #2ecc71; /* Viền xanh */
+    }
+    
+    .table-card.in-use {
+      background: #ffebee; /* Màu đỏ nhạt */
+      border: 2px solid #e74c3c; /* Viền đỏ */
+    }
+    
+    .table-card.reserved {
+      background: #fff8e1; /* Màu vàng nhạt */
+      border: 2px solid #f39c12; /* Viền vàng */
+    }
+    
+    .table-card.disabled {
+      background: #f5f5f5; /* Màu xám nhạt */
+      border: 2px solid #95a5a6; /* Viền xám */
+    }
+    
+    .table-name {
+      font-weight: bold;
+      font-size: 1.3rem;
+      margin-bottom: 8px;
+      color: var(--dark);
+    }
+    
+    .table-capacity {
+      color: var(--gray);
+      font-size: 0.9rem;
+      margin-bottom: 8px;
+    }
+    
+    .table-status {
+      font-size: 0.85rem;
+      font-weight: 500;
+      padding: 4px 8px;
+      border-radius: 4px;
+      display: inline-block;
+    }
+    
+    .table-card.empty .table-status {
+      background: rgba(46, 204, 113, 0.2);
+      color: var(--success);
+    }
+    
+    .table-card.in-use .table-status {
+      background: rgba(231, 76, 60, 0.2);
+      color: var(--accent);
+    }
+    
+    .table-card.reserved .table-status {
+      background: rgba(243, 156, 18, 0.2);
+      color: var(--warning);
+    }
+    
+    .table-card.disabled .table-status {
+      background: rgba(149, 165, 166, 0.2);
+      color: var(--gray);
+    }
+    
+    .table-code {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      background: rgba(0,0,0,0.1);
+      color: rgba(0,0,0,0.5);
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 0.75rem;
+    }
+    
+    .add-table-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+    }
+    
+    /* Responsive */
+    @media (max-width: 992px) {
+      .sidebar {
+        width: var(--sidebar-collapsed);
+      }
+      
+      .sidebar:not(.closed) {
+        width: var(--sidebar-width);
+      }
+      
+      main {
+        margin-left: var(--sidebar-collapsed);
+      }
+      
+      .sidebar:not(.closed) + main {
+        margin-left: var(--sidebar-width);
+      }
+      
+      .branch-table {
+        display: block;
+        overflow-x: auto;
+      }
+      
+      .notification-panel {
+        width: 320px;
+      }
+      
+      .charts-container {
+        grid-template-columns: 1fr;
+      }
+      
+      .zones-container {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      }
+    }
+
+    @media (max-width: 768px) {
+      .branch-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+      }
+      
+      .action-buttons {
+        flex-wrap: wrap;
+      }
+      
+      .modal-content {
+        width: 95%;
+      }
+      
+      .notification-panel {
+        width: 280px;
+      }
+      
+      .stats-container {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      }
+      
+      .tables-container {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      }
+    }
+
+    @media (max-width: 480px) {
+      .main-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+      }
+      
+      .header-right {
+        align-self: flex-end;
+      }
+      
+      .branch-controls {
+        flex-direction: column;
+      }
+      
+      .form-footer {
+        flex-direction: column;
+      }
+      
+      .btn {
+        width: 100%;
+        justify-content: center;
+      }
+      
+      .notification-panel {
+        width: 100%;
+        right: -100%;
+      }
+      
+      .tabs {
+        flex-wrap: wrap;
+      }
+      
+      .tab {
+        flex: 1 0 auto;
+        text-align: center;
+      }
+      
+      .tables-container {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      }
+    }
+    
+    /* CẬP NHẬT: Hiệu ứng cho bàn */
+    .table-card {
+      transition: transform 0.2s, box-shadow 0.2s;
+      cursor: pointer;
+    }
+
+    .table-card:active {
+      transform: scale(0.95);
+    }
+    
+    /* Highlight modal khi mở */
+    .modal-content {
+      box-shadow: 0 0 25px rgba(231, 76, 60, 0.4);
+    }
+    /* Revenue Tab Styles */
+.main-revenue-card {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+  color: white;
+  text-align: center;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.main-revenue-label {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  opacity: 0.9;
+}
+
+.main-revenue-value {
+  font-size: 36px;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+.revenue-comparison {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.15);
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+}
+
+.revenue-comparison i {
+  margin-right: 8px;
+}
+
+.time-filter {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.time-button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 20px;
+  background: #f1f5f9;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-weight: 500;
+}
+
+.time-button.active {
+  background: var(--secondary);
+  color: white;
+}
+
+.recent-orders {
+  background: white;
+  border-radius: 10px;
+  padding: 20px;
+  margin-top: 30px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.section-header h3 {
+  margin: 0;
+}
+
+/* Chart cards */
+.chart-card {
+  background: white;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+}
+
+.chart-card h3 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  color: var(--primary);
+  font-size: 18px;
+  text-align: center;
+}
+
+/* Payment method badges */
+.payment-badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.payment-cash {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+.payment-bank {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+}
+
+.payment-other {
+  background: rgba(107, 114, 128, 0.1);
+  color: #6b7280;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .charts-container {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .charts-container {
+    grid-template-columns: 1fr;
+  }
+  
+  .time-filter {
+    flex-wrap: wrap;
+  }
+  
+  .time-button {
+    flex: 1;
+    min-width: 80px;
+    text-align: center;
+  }
+}
+  </style>
+</head>
+<body>
+  <div class="sidebar" id="sidebar">
+    <button class="toggle-btn" onclick="toggleSidebar()">
+      <i class="fas fa-bars"></i>
+    </button>
+    <nav class="nav-menu">
+      <ul>
+        <li><a href="tongquan.html"><i class="fas fa-chart-line"></i><span class="link-text">Tổng quan</span></a></li>
+        <li><a href="quanlychinhanh.html" class="active"><i class="fas fa-building"></i><span class="link-text">Quản lý chi nhánh</span></a></li>
+        <li>
+          <a href="#" onclick="toggleBranchSubmenu()">
+            <i class="fas fa-store-alt"></i>
+            <span class="link-text">Quản lý nhà hàng</span>
+            <i id="branch-arrow" class="fas fa-chevron-down" style="float: right;"></i>
+          </a>
+          <ul class="submenu" id="branch-submenu" style="display: none; padding-left: 20px;"></ul>
+        </li>
+        <li><a href="quanlynhanvien.html"><i class="fas fa-user-friends"></i><span class="link-text">Quản lý nhân viên</span></a></li>
+        <li><a href="quanlydanhmuc.html"><i class="fas fa-list-alt"></i><span class="link-text">Quản lý danh mục</span></a></li>
+        <li><a href="quanlymenu.html"><i class="fas fa-utensils"></i><span class="link-text">Quản lý menu</span></a></li>
+        <li><a href="quanlykhachhang.html"><i class="fas fa-user"></i><span class="link-text">Quản lý khách hàng</span></a></li>  
+        <li><a href="quanlyvoucher.html"><i class="fas fa-ticket-alt"></i><span class="link-text">Quản lý voucher</span></a></li>
+        <li><a href="setting.html"><i class="fas fa-cogs"></i><span class="link-text">Cài đặt</span></a></li>
+      </ul>
+    </nav>
+  </div>
+
+  <main>
+    <div class="main-header">
+      <h1 id="branch-name-header">Quản lý Chi nhánh</h1>
+      <div class="header-right">
+        <div class="notification-icon" onclick="toggleNotifications()">
+          <i class="fas fa-bell"></i>
+          <span class="notification-badge" id="notification-badge">0</span>
+        </div>
+        <div class="user-profile">
+          <div class="avatar" id="header-avatar">A</div>
+          <span class="user-name" id="header-username">Admin</span>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Branch Detail Tabs -->
+    <div class="tabs">
+      <div class="tab active" data-tab="management">Quản lý</div>
+      <div class="tab" data-tab="revenue">Doanh thu</div>
+      <div class="tab" data-tab="warehouse">Kho hàng</div>
+      <div class="tab" data-tab="shifts">Ca làm</div>
+    </div>
+    
+    <!-- Tab Contents -->
+    <div id="management" class="tab-content active">
+      <!-- Management Tab Content -->
+      <div class="branch-container">
+        <div class="branch-header">
+          <h2>Quản lý Khu vực và Bàn</h2>
+          <button class="btn btn-primary" id="add-zone-btn" onclick="openAddZoneModal()">
+            <i class="fas fa-plus"></i> Thêm khu vực
+          </button>
+        </div>
+        
+        <!-- Cảnh báo giới hạn khu vực -->
+        <div class="limit-warning" id="zone-limit-warning">
+          <i class="fas fa-exclamation-triangle"></i>
+          <span id="zone-limit-text"></span>
+        </div>
+        
+        <div class="stats-container">
+          <div class="stat-card">
+            <h3 id="total-zones">0</h3>
+            <p>Tổng số khu vực</p>
+          </div>
+          <div class="stat-card">
+            <h3 id="total-tables">0</h3>
+            <p>Tổng số bàn</p>
+          </div>
+          <div class="stat-card">
+            <h3 id="empty-tables">0</h3>
+            <p>Bàn đang trống</p>
+          </div>
+          <div class="stat-card">
+            <h3 id="in-use-tables">0</h3>
+            <p>Bàn đang sử dụng</p>
+          </div>
+          <div class="stat-card">
+            <h3 id="reserved-tables">0</h3>
+            <p>Bàn đã đặt trước</p>
+          </div>
+        </div>
+        
+        <div class="zones-container" id="zones-list">
+          <!-- Zones will be loaded here -->
+        </div>
+      </div>
+    </div>
+    
+    <div id="revenue" class="tab-content">
+  <!-- Revenue Tab Content -->
+  <div class="branch-container">
+    <div class="branch-header">
+      <h2>Doanh thu chi nhánh</h2>
+      <div class="time-filter">
+        <button class="time-button active" data-period="today">Hôm nay</button>
+        <button class="time-button" data-period="week">Tuần</button>
+        <button class="time-button" data-period="month">Tháng</button>
+        <button class="time-button" data-period="all">Tất cả</button>
+      </div>
+    </div>
+    
+    <!-- Main Revenue Card -->
+    <div class="main-revenue-card">
+      <div class="main-revenue-label" id="revenue-period-label">DOANH THU HÔM NAY</div>
+      <div class="main-revenue-value" id="main-revenue-value">0 ₫</div>
+      <div class="revenue-comparison">
+        <i class="fas fa-chart-line"></i>
+        <span id="revenue-comparison-text">Không có dữ liệu so sánh</span>
+      </div>
+    </div>
+    
+    <!-- Stats Cards -->
+    <div class="stats-container">
+      <div class="stat-card">
+        <h3 id="total-orders">0</h3>
+        <p>Tổng đơn hàng</p>
+      </div>
+      <div class="stat-card">
+        <h3 id="takeaway-orders">0</h3>
+        <p>Mang về</p>
+      </div>
+      <div class="stat-card">
+        <h3 id="dinein-orders">0</h3>
+        <p>Tại chỗ</p>
+      </div>
+      <div class="stat-card">
+        <h3 id="avg-order-value">0 ₫</h3>
+        <p>Trung bình/đơn</p>
+      </div>
+    </div>
+    
+    <!-- Charts Container -->
+    <div class="charts-container">
+      <div class="chart-card">
+        <h3>Doanh thu theo ngày</h3>
+        <canvas id="daily-revenue-chart"></canvas>
+      </div>
+      <div class="chart-card">
+        <h3>Phân loại đơn hàng</h3>
+        <canvas id="order-type-chart"></canvas>
+      </div>
+      <div class="chart-card">
+        <h3>Sản phẩm bán chạy</h3>
+        <canvas id="top-products-chart"></canvas>
+      </div>
+      <div class="chart-card">
+        <h3>Phương thức thanh toán</h3>
+        <canvas id="payment-method-chart"></canvas>
+      </div>
+    </div>
+    
+    <!-- Recent Orders -->
+    <div class="recent-orders">
+      <div class="section-header">
+        <h3>Đơn hàng gần đây</h3>
+        <button class="btn btn-primary" onclick="viewAllOrders()">
+          <i class="fas fa-list"></i> Xem tất cả
+        </button>
+      </div>
+      <table class="branch-table">
+        <thead>
+          <tr>
+            <th>Mã đơn</th>
+            <th>Thời gian</th>
+            <th>Khách hàng</th>
+            <th>Loại</th>
+            <th>Tổng tiền</th>
+            <th>Thanh toán</th>
+          </tr>
+        </thead>
+        <tbody id="recent-orders-list">
+          <!-- Recent orders will be loaded here -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+    
+    <div id="warehouse" class="tab-content">
+      <!-- Warehouse Tab Content -->
+      <div class="branch-container">
+        <div class="branch-header">
+          <h2>Quản lý kho hàng</h2>
+          <button class="btn btn-primary" id="add-item-btn" onclick="openAddItemModal()">
+            <i class="fas fa-plus"></i> Thêm hàng hóa
+          </button>
+        </div>
+        
+        <!-- Cảnh báo giới hạn hàng hóa -->
+        <div class="limit-warning" id="item-limit-warning">
+          <i class="fas fa-exclamation-triangle"></i>
+          <span id="item-limit-text"></span>
+        </div>
+        
+        <div class="branch-controls">
+          <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="item-search" placeholder="Tìm kiếm hàng hóa..." oninput="filterItems()">
+          </div>
+        </div>
+        
+        <div class="table-responsive">
+          <table class="branch-table">
+            <thead>
+              <tr>
+                <th>Mã hàng</th>
+                <th>Tên hàng</th>
+                <th>Loại</th>
+                <th>Số lượng</th>
+                <th>Trạng thái</th>
+                <th>Hành động</th>
+              </tr>
+            </thead>
+            <tbody id="items-list">
+              <!-- Items will be loaded here -->
+            </tbody>
+          </table>
+        </div>
+        
+        <div id="empty-item-state" class="empty-state" style="display: none;">
+          <i class="fas fa-box-open"></i>
+          <p>Kho hàng trống</p>
+          <button class="btn btn-primary" id="add-first-item-btn" onclick="openAddItemModal()" style="margin-top: 20px;">
+            <i class="fas fa-plus"></i> Thêm hàng hóa đầu tiên
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <div id="shifts" class="tab-content">
+      <!-- Shifts Tab Content -->
+      <div class="branch-container">
+        <div class="branch-header">
+          <h2>Quản lý ca làm</h2>
+          <button class="btn btn-primary" id="add-shift-btn" onclick="openAddShiftModal()">
+            <i class="fas fa-plus"></i> Thêm ca làm
+          </button>
+        </div>
+        
+        <!-- Cảnh báo giới hạn ca làm -->
+        <div class="limit-warning" id="shift-limit-warning">
+          <i class="fas fa-exclamation-triangle"></i>
+          <span id="shift-limit-text"></span>
+        </div>
+        
+        <div class="table-responsive">
+          <table class="branch-table">
+            <thead>
+              <tr>
+                <th>Mã ca</th>
+                <th>Tên ca</th>
+                <th>Giờ bắt đầu</th>
+                <th>Giờ kết thúc</th>
+                <th>Tổng giờ</th>
+                <th>Hành động</th>
+              </tr>
+            </thead>
+            <tbody id="shifts-list">
+              <!-- Shifts will be loaded here -->
+            </tbody>
+          </table>
+        </div>
+        
+        <div id="empty-shift-state" class="empty-state" style="display: none;">
+          <i class="fas fa-clock"></i>
+          <p>Chưa có ca làm nào</p>
+          <button class="btn btn-primary" id="add-first-shift-btn" onclick="openAddShiftModal()" style="margin-top: 20px;">
+            <i class="fas fa-plus"></i> Thêm ca làm đầu tiên
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+  
+  <!-- Add Zone Modal -->
+  <div class="modal" id="add-zone-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="zone-modal-title">Thêm khu vực mới</h3>
+        <button class="close-btn" onclick="closeAddZoneModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="zone-code">Mã khu vực *</label>
+          <input type="text" id="zone-code" placeholder="VD: KV001">
+        </div>
+        <div class="form-group">
+          <label for="zone-name">Tên khu vực *</label>
+          <input type="text" id="zone-name" placeholder="VD: Tầng 1">
+        </div>
+        <div class="form-group">
+          <label for="zone-status">Trạng thái *</label>
+          <select id="zone-status">
+            <option value="active">Hoạt động</option>
+            <option value="inactive">Ngừng hoạt động</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-footer">
+        <button class="btn" onclick="closeAddZoneModal()">Hủy</button>
+        <button class="btn btn-success" id="zone-save-btn">Lưu</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Add/Edit Table Modal -->
+  <div class="modal" id="table-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="table-modal-title">Thêm bàn mới</h3>
+        <button class="close-btn" onclick="closeTableModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="table-zone">Khu vực *</label>
+          <select id="table-zone">
+            <!-- Options will be added dynamically -->
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="table-code">Mã bàn *</label>
+          <input type="text" id="table-code" placeholder="VD: B001">
+        </div>
+        <div class="form-group">
+          <label for="table-name">Tên bàn *</label>
+          <input type="text" id="table-name" placeholder="VD: Bàn số 1">
+        </div>
+        <div class="form-group">
+          <label for="table-capacity">Sức chứa *</label>
+          <input type="number" id="table-capacity" placeholder="VD: 4" min="2">
+          <small class="text-muted">Sức chứa phải lớn hơn 1</small>
+        </div>
+        <div class="form-group">
+          <label for="table-status">Tình trạng *</label>
+          <select id="table-status">
+            <option value="empty">Đang trống</option>
+            <option value="in-use">Đang sử dụng</option>
+            <option value="reserved">Đã đặt trước</option>
+            <option value="disabled">Vô hiệu hóa</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-footer">
+        <button class="btn" onclick="closeTableModal()">Hủy</button>
+        <button class="btn btn-success" id="table-save-btn">Lưu</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Add Item Modal -->
+  <div class="modal" id="add-item-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Thêm hàng hóa mới</h3>
+        <button class="close-btn" onclick="closeAddItemModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="item-code">Mã hàng *</label>
+          <input type="text" id="item-code" placeholder="VD: HH001">
+        </div>
+        <div class="form-group">
+          <label for="item-name">Tên hàng *</label>
+          <input type="text" id="item-name" placeholder="VD: Thịt bò">
+        </div>
+        <div class="form-group">
+          <label for="item-type">Loại *</label>
+          <select id="item-type">
+            <option value="ingredient">Nguyên liệu</option>
+            <option value="supply">Vật dụng</option>
+            <option value="other">Khác</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="item-quantity">Số lượng *</label>
+          <div style="display: flex; gap: 10px;">
+            <input type="number" id="item-quantity" placeholder="VD: 10" min="0" step="0.01" style="flex: 1;">
+            <select id="item-unit" style="width: 100px;">
+              <option value="kg">Kg</option>
+              <option value="ml">Ml</option>
+              <option value="piece">Cái</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="item-status">Trạng thái *</label>
+          <select id="item-status">
+            <option value="available">Còn hàng</option>
+            <option value="low">Sắp hết</option>
+            <option value="out">Hết hàng</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-footer">
+        <button class="btn" onclick="closeAddItemModal()">Hủy</button>
+        <button class="btn btn-success" onclick="saveItem()">Lưu</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Add Shift Modal -->
+  <div class="modal" id="add-shift-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Thêm ca làm mới</h3>
+        <button class="close-btn" onclick="closeAddShiftModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="shift-code">Mã ca *</label>
+          <input type="text" id="shift-code" placeholder="VD: CA001">
+        </div>
+        <div class="form-group">
+          <label for="shift-name">Tên ca *</label>
+          <input type="text" id="shift-name" placeholder="VD: Ca sáng">
+        </div>
+        <div class="form-group">
+          <label for="shift-start">Giờ bắt đầu *</label>
+          <input type="time" id="shift-start">
+        </div>
+        <div class="form-group">
+          <label for="shift-end">Giờ kết thúc *</label>
+          <input type="time" id="shift-end">
+        </div>
+      </div>
+      <div class="form-footer">
+        <button class="btn" onclick="closeAddShiftModal()">Hủy</button>
+        <button class="btn btn-success" onclick="saveShift()">Lưu</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification Panel -->
+  <div class="notification-panel" id="notification-panel">
+    <div class="notification-header">
+      <h3>Thông báo</h3>
+      <button class="close-notifications" onclick="toggleNotifications()">&times;</button>
+    </div>
+    <div class="notification-list" id="notification-list">
+      <!-- Notifications will be added here -->
+    </div>
+    <div class="notification-footer">
+      <button class="clear-notifications" onclick="clearNotifications()">
+        <i class="fas fa-trash-alt"></i> Xóa tất cả thông báo
+      </button>
+    </div>
+  </div>
+  
+  <!-- Overlay for notification panel -->
+  <div class="overlay" id="overlay" onclick="toggleNotifications()"></div>
+
+  <!-- Firebase Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  
+  <script>
+    // Initialize Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyBzAdWAVjD_NQP3uglLYOOFWUmDGsylsg0",
+      authDomain: "foodiee-fcdc1.firebaseapp.com",
+      databaseURL: "https://foodiee-fcdc1-default-rtdb.firebaseio.com",
+      projectId: "foodiee-fcdc1",
+      storageBucket: "foodiee-fcdc1.appspot.com",
+      messagingSenderId: "993331259398",
+      appId: "1:993331259398:web:2b922ef5e0519d5e237b87",
+      measurementId: "G-PDT1VE8JL5"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+    const auth = firebase.auth();
+    
+    // DOM elements
+    const branchNameHeader = document.getElementById('branch-name-header');
+    const tabs = document.querySelectorAll('.tab');
+    const tabContents = document.querySelectorAll('.tab-content');
+    const notificationBadge = document.getElementById('notification-badge');
+    const notificationList = document.getElementById('notification-list');
+    const notificationPanel = document.getElementById('notification-panel');
+    const overlay = document.getElementById('overlay');
+    
+    // Global variables
+    let currentUser = null;
+    let currentUserRole = '';
+    let currentBranchCode = '';
+    let currentBranchName = '';
+    let zones = {};
+    let tables = {};
+    let items = {};
+    let shifts = {};
+    let revenueData = {};
+    let currentEditingTable = null;
+    let currentEditingZoneId = null;
+    let orders = {};
+    let currentRevenuePeriod = 'today';
+    let dailyRevenueChart, orderTypeChart, topProductsChart, paymentMethodChart;
+    
+    // Account limits
+    const accountLimits = {
+      'admin base': {
+        zones: 2,
+        tablesPerZone: 5,
+        items: 10,
+        shifts: 3
+      },
+      'admin pro': {
+        zones: 6,
+        tablesPerZone: 10,
+        items: Infinity,
+        shifts: Infinity
+      },
+      'admin limited': {
+        zones: Infinity,
+        tablesPerZone: Infinity,
+        items: Infinity,
+        shifts: Infinity
+      }
+    };
+    
+    // Toggle sidebar
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      sidebar.classList.toggle('closed');
+      localStorage.setItem('sidebarClosed', sidebar.classList.contains('closed'));
+    }
+    
+    // Toggle branch submenu
+    function toggleBranchSubmenu() {
+      const submenu = document.getElementById('branch-submenu');
+      const arrow = document.getElementById('branch-arrow');
+      
+      if (submenu.style.display === 'none' || submenu.style.display === '') {
+        submenu.style.display = 'block';
+        submenu.classList.add('show');
+        arrow.classList.remove('fa-chevron-down');
+        arrow.classList.add('fa-chevron-up');
+      } else {
+        submenu.style.display = 'none';
+        submenu.classList.remove('show');
+        arrow.classList.remove('fa-chevron-up');
+        arrow.classList.add('fa-chevron-down');
+      }
+    }
+    
+    // Toggle notifications panel
+    function toggleNotifications() {
+      notificationPanel.classList.toggle('open');
+      overlay.classList.toggle('show');
+      
+      // Mark all notifications as read when opening panel
+      if (notificationPanel.classList.contains('open')) {
+        markNotificationsAsRead();
+      }
+    }
+
+    // Format time
+    function formatTime(timestamp) {
+      const date = new Date(timestamp);
+      return date.toLocaleString('vi-VN', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      if (localStorage.getItem('sidebarClosed') === 'true') {
+        document.getElementById('sidebar').classList.add('closed');
+      }
+      
+      // Get branch code from URL
+      const urlParams = new URLSearchParams(window.location.search);
+      currentBranchCode = urlParams.get('code');
+      
+      if (!currentBranchCode) {
+        alert('Không tìm thấy chi nhánh!');
+        window.location.href = 'quanlychinhanh.html';
+        return;
+      }
+      
+      // Set up tab switching
+      tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          // Remove active class from all tabs
+          tabs.forEach(t => t.classList.remove('active'));
+          tabContents.forEach(tc => tc.classList.remove('active'));
+          
+          // Add active class to clicked tab
+          tab.classList.add('active');
+          document.getElementById(tab.dataset.tab).classList.add('active');
+        });
+      });
+      
+      // Set up time filter buttons for revenue tab
+      document.querySelectorAll('.time-button').forEach(button => {
+        button.addEventListener('click', function() {
+          document.querySelectorAll('.time-button').forEach(btn => btn.classList.remove('active'));
+          this.classList.add('active');
+          currentRevenuePeriod = this.dataset.period;
+          updateRevenueStats();
+          renderRevenueCharts();
+        });
+      });
+      
+      // Initialize Firebase auth
+      auth.onAuthStateChanged(user => {
+        if (user) {
+          currentUser = user;
+          loadUserInfo();
+          loadBranchInfo();
+          loadZones();
+          loadTables();
+          loadItems();
+          loadShifts();
+          loadOrders(); // Load orders data
+          loadNotifications();
+        } else {
+          window.location.href = 'index.html';
+        }
+      });
+    });
+    
+    // Load user info and role
+    function loadUserInfo() {
+      const userRef = firebase.database().ref(`users/${currentUser.uid}/info_user`);
+      userRef.once('value').then((snapshot) => {
+        const data = snapshot.val();
+        if (!data) return;
+
+        // Get user role
+        currentUserRole = data.role || 'admin base';
+        updateAccountLimitsDisplay();
+        
+        // Update UI elements based on role
+        const avatarEl = document.getElementById('header-avatar');
+        const nameEl = document.getElementById('header-username');
+        
+        if (nameEl) nameEl.textContent = data.name || user.email.split('@')[0];
+        if (avatarEl) avatarEl.textContent = data.name ? data.name.charAt(0).toUpperCase() : 'A';
+      });
+    }
+    
+    // Update account limits display (CHỈ HIỂN THỊ KHI VƯỢT QUÁ GIỚI HẠN)
+    function updateAccountLimitsDisplay() {
+      const limits = accountLimits[currentUserRole] || accountLimits['admin base'];
+      
+      // Ẩn tất cả cảnh báo trước khi kiểm tra
+      document.getElementById('zone-limit-warning').classList.remove('show');
+      document.getElementById('item-limit-warning').classList.remove('show');
+      document.getElementById('shift-limit-warning').classList.remove('show');
+      
+      // Kiểm tra và hiển thị cảnh báo cho khu vực
+      if (Object.keys(zones).length >= limits.zones) {
+        const warningEl = document.getElementById('zone-limit-warning');
+        warningEl.classList.add('show');
+        document.getElementById('zone-limit-text').textContent = 
+          `Bạn đã đạt giới hạn tối đa ${limits.zones} khu vực`;
+      }
+      
+      // Kiểm tra và hiển thị cảnh báo cho hàng hóa
+      if (Object.keys(items).length >= limits.items) {
+        const warningEl = document.getElementById('item-limit-warning');
+        warningEl.classList.add('show');
+        document.getElementById('item-limit-text').textContent = 
+          `Bạn đã đạt giới hạn tối đa ${limits.items} hàng hóa`;
+      }
+      
+      // Kiểm tra và hiển thị cảnh báo cho ca làm
+      if (Object.keys(shifts).length >= limits.shifts) {
+        const warningEl = document.getElementById('shift-limit-warning');
+        warningEl.classList.add('show');
+        document.getElementById('shift-limit-text').textContent = 
+          `Bạn đã đạt giới hạn tối đa ${limits.shifts} ca làm`;
+      }
+      
+      // Cập nhật trạng thái nút dựa trên giới hạn
+      updateZoneButtons();
+      updateItemButtons();
+      updateShiftButtons();
+    }
+    
+    // Load branch info
+    function loadBranchInfo() {
+      const branchRef = database.ref(`users/${currentUser.uid}/branches/${currentBranchCode}`);
+      branchRef.once('value')
+        .then(snapshot => {
+          const branch = snapshot.val();
+          if (!branch) {
+            alert('Không tìm thấy thông tin chi nhánh!');
+            window.location.href = 'quanlychinhanh.html';
+            return;
+          }
+          
+          currentBranchName = branch.name;
+          branchNameHeader.textContent = `Chi nhánh ${currentBranchName}`;
+        })
+        .catch(error => {
+          console.error('Error loading branch info:', error);
+          showToast('Lỗi khi tải thông tin chi nhánh', 'error');
+        });
+    }
+    
+    // Load zones
+    function loadZones() {
+      const zonesRef = database.ref(`users/${currentUser.uid}/branches/${currentBranchCode}/local/zones`);
+      zonesRef.on('value', snapshot => {
+        zones = snapshot.val() || {};
+        renderZones();
+        updateZoneStats();
+        populateZoneDropdown();
+        updateAccountLimitsDisplay(); // Cập nhật cảnh báo giới hạn
+      });
+    }
+    
+    // Load tables
+    function loadTables() {
+      const tablesRef = database.ref(`users/${currentUser.uid}/branches/${currentBranchCode}/local/tables`);
+      tablesRef.on('value', snapshot => {
+        tables = {};
+        snapshot.forEach(childSnapshot => {
+          tables[childSnapshot.key] = { id: childSnapshot.key, ...childSnapshot.val() };
+        });
+        renderZones();
+        updateZoneStats();
+      });
+    }
+    
+    // Load items
+    function loadItems() {
+      const itemsRef = database.ref(`users/${currentUser.uid}/branches/${currentBranchCode}/warehouse`);
+      itemsRef.on('value', snapshot => {
+        items = snapshot.val() || {};
+        renderItems();
+        updateAccountLimitsDisplay(); // Cập nhật cảnh báo giới hạn
+      });
+    }
+    
+    // Load shifts
+    function loadShifts() {
+      const shiftsRef = database.ref(`users/${currentUser.uid}/branches/${currentBranchCode}/shifts`);
+      shiftsRef.on('value', snapshot => {
+        shifts = snapshot.val() || {};
+        renderShifts();
+        updateAccountLimitsDisplay(); // Cập nhật cảnh báo giới hạn
+      });
+    }
+    
+    // Load orders
+    function loadOrders() {
+      const ordersRef = database.ref(`users/${currentUser.uid}/branches/${currentBranchCode}/orders`);
+      ordersRef.on('value', snapshot => {
+        orders = {};
+        snapshot.forEach(childSnapshot => {
+          const order = childSnapshot.val();
+          // Chỉ lấy các đơn đã thanh toán
+          if (order.status === 'đã thanh toán' || order.status === 'completed') {
+            orders[childSnapshot.key] = {
+              id: childSnapshot.key,
+              ...order,
+              createdAt: order.createdAt || new Date().toISOString(),
+              paymentMethod: order.paymentMethod || 'unknown'
+            };
+          }
+        });
+        updateRevenueStats();
+        renderRecentOrders();
+        renderRevenueCharts();
+      });
+    }
+    
+    // Update revenue stats
+    function updateRevenueStats() {
+      const now = new Date();
+      let filteredOrders = Object.values(orders);
+      let periodLabel = 'TẤT CẢ DOANH THU';
+      let comparisonText = 'Không có dữ liệu so sánh';
+      
+      // Lọc đơn hàng theo khoảng thời gian
+      switch(currentRevenuePeriod) {
+        case 'today':
+          const today = now.toISOString().split('T')[0];
+          filteredOrders = filteredOrders.filter(order => order.createdAt.includes(today));
+          periodLabel = 'DOANH THU HÔM NAY';
+          
+          // Tính % thay đổi so với hôm qua
+          const yesterday = new Date(now);
+          yesterday.setDate(yesterday.getDate() - 1);
+          const yesterdayStr = yesterday.toISOString().split('T')[0];
+          const yesterdayOrders = Object.values(orders).filter(order => order.createdAt.includes(yesterdayStr));
+          const yesterdayRevenue = yesterdayOrders.reduce((sum, order) => sum + (order.total || 0), 0);
+          const todayRevenue = filteredOrders.reduce((sum, order) => sum + (order.total || 0), 0);
+          
+          if (yesterdayRevenue > 0) {
+            const changePercent = ((todayRevenue - yesterdayRevenue) / yesterdayRevenue * 100).toFixed(1);
+            comparisonText = `So với hôm qua: ${changePercent}%`;
+          }
+          break;
+          
+        case 'week':
+          const weekStart = new Date(now.setDate(now.getDate() - now.getDay()));
+          filteredOrders = filteredOrders.filter(order => new Date(order.createdAt) >= weekStart);
+          periodLabel = 'DOANH THU TUẦN NÀY';
+          
+          // Tính % thay đổi so với tuần trước
+          const lastWeekStart = new Date(weekStart);
+          lastWeekStart.setDate(lastWeekStart.getDate() - 7);
+          const lastWeekEnd = new Date(weekStart);
+          lastWeekEnd.setDate(lastWeekEnd.getDate() - 1);
+          
+          const lastWeekOrders = Object.values(orders).filter(order => {
+            const orderDate = new Date(order.createdAt);
+            return orderDate >= lastWeekStart && orderDate <= lastWeekEnd;
+          });
+          
+          const lastWeekRevenue = lastWeekOrders.reduce((sum, order) => sum + (order.total || 0), 0);
+          const thisWeekRevenue = filteredOrders.reduce((sum, order) => sum + (order.total || 0), 0);
+          
+          if (lastWeekRevenue > 0) {
+            const changePercent = ((thisWeekRevenue - lastWeekRevenue) / lastWeekRevenue * 100).toFixed(1);
+            comparisonText = `So với tuần trước: ${changePercent}%`;
+          }
+          break;
+          
+        case 'month':
+          const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+          filteredOrders = filteredOrders.filter(order => new Date(order.createdAt) >= monthStart);
+          periodLabel = 'DOANH THU THÁNG NÀY';
+          
+          // Tính % thay đổi so với tháng trước
+          const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+          const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
+          
+          const lastMonthOrders = Object.values(orders).filter(order => {
+            const orderDate = new Date(order.createdAt);
+            return orderDate >= lastMonthStart && orderDate <= lastMonthEnd;
+          });
+          
+          const lastMonthRevenue = lastMonthOrders.reduce((sum, order) => sum + (order.total || 0), 0);
+          const thisMonthRevenue = filteredOrders.reduce((sum, order) => sum + (order.total || 0), 0);
+          
+          if (lastMonthRevenue > 0) {
+            const changePercent = ((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue * 100).toFixed(1);
+            comparisonText = `So với tháng trước: ${changePercent}%`;
+          }
+          break;
+          
+        case 'all':
+          // Không lọc gì cả, lấy tất cả đơn hàng
+          break;
+      }
+      
+      // Tính toán thống kê
+      const totalRevenue = filteredOrders.reduce((sum, order) => sum + (order.total || 0), 0);
+      const totalOrders = filteredOrders.length;
+      const takeawayOrders = filteredOrders.filter(order => order.type === 'takeaway').length;
+      const dineinOrders = filteredOrders.filter(order => order.type === 'dine-in').length;
+      const avgOrderValue = totalOrders > 0 ? Math.round(totalRevenue / totalOrders) : 0;
+      
+      // Cập nhật UI
+      document.getElementById('revenue-period-label').textContent = periodLabel;
+      document.getElementById('main-revenue-value').textContent = totalRevenue.toLocaleString() + ' ₫';
+      document.getElementById('revenue-comparison-text').textContent = comparisonText;
+      document.getElementById('total-orders').textContent = totalOrders;
+      document.getElementById('takeaway-orders').textContent = takeawayOrders;
+      document.getElementById('dinein-orders').textContent = dineinOrders;
+      document.getElementById('avg-order-value').textContent = avgOrderValue.toLocaleString() + ' ₫';
+    }
+    
+    // Render recent orders
+    function renderRecentOrders() {
+      const recentOrdersList = document.getElementById('recent-orders-list');
+      recentOrdersList.innerHTML = '';
+      
+      // Sắp xếp đơn hàng mới nhất trước
+      const sortedOrders = Object.values(orders).sort((a, b) => 
+        new Date(b.createdAt) - new Date(a.createdAt)
+      ).slice(0, 5); // Lấy 5 đơn gần nhất
+      
+      if (sortedOrders.length === 0) {
+        recentOrdersList.innerHTML = `
+          <tr>
+            <td colspan="6" class="empty-state">
+              <i class="fas fa-receipt"></i>
+              <p>Chưa có đơn hàng nào</p>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+      
+      sortedOrders.forEach(order => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${order.id.substring(0, 6)}...</td>
+          <td>${formatTime(order.createdAt)}</td>
+          <td>${order.customerName || 'Khách vãng lai'}</td>
+          <td>${order.type === 'takeaway' ? 'Mang về' : 'Tại chỗ'}</td>
+          <td>${(order.total || 0).toLocaleString()} ₫</td>
+          <td>
+            <span class="payment-badge payment-${order.paymentMethod || 'other'}">
+              ${getPaymentMethodLabel(order.paymentMethod)}
+            </span>
+          </td>
+        `;
+        recentOrdersList.appendChild(row);
+      });
+    }
+    
+    // Hàm hỗ trợ hiển th phương thức thanh toán
+    function getPaymentMethodLabel(method) {
+      switch(method) {
+        case 'cash': return 'Tiền mặt';
+        case 'bank': return 'Chuyển khoản';
+        default: return 'Khác';
+      }
+    }
+    
+    // Render revenue charts
+    function renderRevenueCharts() {
+      // Lọc đơn hàng theo khoảng thời gian hiện tại
+      let filteredOrders = Object.values(orders);
+      const now = new Date();
+      
+      switch(currentRevenuePeriod) {
+        case 'today':
+          const today = now.toISOString().split('T')[0];
+          filteredOrders = filteredOrders.filter(order => order.createdAt.includes(today));
+          break;
+        case 'week':
+          const weekStart = new Date(now.setDate(now.getDate() - now.getDay()));
+          filteredOrders = filteredOrders.filter(order => new Date(order.createdAt) >= weekStart);
+          break;
+        case 'month':
+          const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+          filteredOrders = filteredOrders.filter(order => new Date(order.createdAt) >= monthStart);
+          break;
+        case 'all':
+          // Không lọc gì cả
+          break;
+      }
+      
+      // Chuẩn bị dữ liệu cho các biểu đồ
+      prepareDailyRevenueChart(filteredOrders);
+      prepareOrderTypeChart(filteredOrders);
+      prepareTopProductsChart(filteredOrders);
+      preparePaymentMethodChart(filteredOrders);
+    }
+    
+    function prepareDailyRevenueChart(orders) {
+      const dailyData = {};
+      
+      // Nhóm doanh thu theo ngày
+      orders.forEach(order => {
+        const date = new Date(order.createdAt).toLocaleDateString('vi-VN');
+        if (!dailyData[date]) {
+          dailyData[date] = 0;
+        }
+        dailyData[date] += order.total || 0;
+      });
+      
+      // Chuyển đổi thành mảng để vẽ biểu đồ
+      const labels = Object.keys(dailyData).sort((a, b) => new Date(a) - new Date(b));
+      const data = labels.map(date => dailyData[date]);
+      
+      // Vẽ hoặc cập nhật biểu đồ
+      const ctx = document.getElementById('daily-revenue-chart').getContext('2d');
+      
+      if (dailyRevenueChart) {
+        dailyRevenueChart.data.labels = labels;
+        dailyRevenueChart.data.datasets[0].data = data;
+        dailyRevenueChart.update();
+      } else {
+        dailyRevenueChart = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: 'Doanh thu',
+              data: data,
+              backgroundColor: 'rgba(59, 130, 246, 0.5)',
+              borderColor: 'rgba(59, 130, 246, 1)',
+              borderWidth: 1
+            }]
+          },
+          options: {
+            responsive: true,
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  callback: function(value) {
+                    return value.toLocaleString() + ' ₫';
+                  }
+                }
+              }
+            }
+          }
+        });
+      }
+    }
+    
+    function prepareOrderTypeChart(orders) {
+      const typeData = {
+        takeaway: 0,
+        dinein: 0
+      };
+      
+      orders.forEach(order => {
+        if (order.type === 'takeaway') {
+          typeData.takeaway += order.total || 0;
+        } else {
+          typeData.dinein += order.total || 0;
+        }
+      });
+      
+      const ctx = document.getElementById('order-type-chart').getContext('2d');
+      const data = [typeData.takeaway, typeData.dinein];
+      
+      if (orderTypeChart) {
+        orderTypeChart.data.datasets[0].data = data;
+        orderTypeChart.update();
+      } else {
+        orderTypeChart = new Chart(ctx, {
+          type: 'pie',
+          data: {
+            labels: ['Mang về', 'Tại chỗ'],
+            datasets: [{
+              data: data,
+              backgroundColor: [
+                'rgba(16, 185, 129, 0.5)',
+                'rgba(59, 130, 246, 0.5)'
+              ],
+              borderColor: [
+                'rgba(16, 185, 129, 1)',
+                'rgba(59, 130, 246, 1)'
+              ],
+              borderWidth: 1
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              tooltip: {
+                callbacks: {
+                  label: function(context) {
+                    const label = context.label || '';
+                    const value = context.raw || 0;
+                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                    const percentage = Math.round((value / total) * 100);
+                    return `${label}: ${value.toLocaleString()} ₫ (${percentage}%)`;
+                  }
+                }
+              }
+            }
+          }
+        });
+      }
+    }
+    
+    function prepareTopProductsChart(orders) {
+      const productData = {};
+      
+      // Thống kê sản phẩm bán chạy
+      orders.forEach(order => {
+        if (order.items && Array.isArray(order.items)) {
+          order.items.forEach(item => {
+            if (!productData[item.productId]) {
+              productData[item.productId] = {
+                name: item.name || 'Sản phẩm không tên',
+                quantity: 0,
+                revenue: 0
+              };
+            }
+            productData[item.productId].quantity += item.quantity || 1;
+            productData[item.productId].revenue += (item.price || 0) * (item.quantity || 1);
+          });
+        }
+      });
+      
+      // Chuyển đổi thành mảng và sắp xếp
+      const topProducts = Object.values(productData)
+        .sort((a, b) => b.revenue - a.revenue)
+        .slice(0, 5); // Lấy top 5 sản phẩm
+      
+      const labels = topProducts.map(p => p.name);
+      const revenueData = topProducts.map(p => p.revenue);
+      const quantityData = topProducts.map(p => p.quantity);
+      
+      // Vẽ biểu đồ
+      const ctx = document.getElementById('top-products-chart').getContext('2d');
+      
+      if (topProductsChart) {
+        topProductsChart.data.labels = labels;
+        topProductsChart.data.datasets[0].data = revenueData;
+        topProductsChart.data.datasets[1].data = quantityData;
+        topProductsChart.update();
+      } else {
+        topProductsChart = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: 'Doanh thu',
+                data: revenueData,
+                backgroundColor: 'rgba(59, 130, 246, 0.5)',
+                borderColor: 'rgba(59, 130, 246, 1)',
+                borderWidth: 1,
+                yAxisID: 'y'
+              },
+              {
+                label: 'Số lượng',
+                data: quantityData,
+                backgroundColor: 'rgba(16, 185, 129, 0.5)',
+                borderColor: 'rgba(16, 185, 129, 1)',
+                borderWidth: 1,
+                yAxisID: 'y1',
+                type: 'line'
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            scales: {
+              y: {
+                type: 'linear',
+                display: true,
+                position: 'left',
+                title: {
+                  display: true,
+                  text: 'Doanh thu (₫)'
+                },
+                ticks: {
+                  callback: function(value) {
+                    return value.toLocaleString() + ' ₫';
+                  }
+                }
+              },
+              y1: {
+                type: 'linear',
+                display: true,
+                position: 'right',
+                title: {
+                  display: true,
+                  text: 'Số lượng'
+                },
+                grid: {
+                  drawOnChartArea: false
+                }
+              }
+            }
+          }
+        });
+      }
+    }
+    
+    function preparePaymentMethodChart(orders) {
+      const paymentData = {
+        cash: 0,
+        bank: 0,
+        other: 0
+      };
+      
+      orders.forEach(order => {
+        const method = order.paymentMethod || 'other';
+        paymentData[method] += order.total || 0;
+      });
+      
+      const ctx = document.getElementById('payment-method-chart').getContext('2d');
+      const data = [paymentData.cash, paymentData.bank, paymentData.other];
+      
+      if (paymentMethodChart) {
+        paymentMethodChart.data.datasets[0].data = data;
+        paymentMethodChart.update();
+      } else {
+        paymentMethodChart = new Chart(ctx, {
+          type: 'doughnut',
+          data: {
+            labels: ['Tiền mặt', 'Chuyển khoản', 'Khác'],
+            datasets: [{
+              data: data,
+              backgroundColor: [
+                'rgba(16, 185, 129, 0.5)',
+                'rgba(59, 130, 246, 0.5)',
+                'rgba(107, 114, 128, 0.5)'
+              ],
+              borderColor: [
+                'rgba(16, 185, 129, 1)',
+                'rgba(59, 130, 246, 1)',
+                'rgba(107, 114, 128, 1)'
+              ],
+              borderWidth: 1
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: {
+                position: 'bottom'
+              },
+              tooltip: {
+                callbacks: {
+                  label: function(context) {
+                    const label = context.label || '';
+                    const value = context.raw || 0;
+                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                    const percentage = Math.round((value / total) * 100);
+                    return `${label}: ${value.toLocaleString()} ₫ (${percentage}%)`;
+                  }
+                }
+              }
+            }
+          }
+        });
+      }
+    }
+    
+    // Hàm xem tất cả đơn hàng
+    function viewAllOrders() {
+      // Trong thực tế, bạn có thể chuyển hướng đến trang danh sách đơn hàng đầy đủ
+      alert('Chức năng xem tất cả đơn hàng sẽ được triển khai sau');
+    }
+    
+    // Render zones and tables
+    function renderZones() {
+      const zonesList = document.getElementById('zones-list');
+      zonesList.innerHTML = '';
+      
+      Object.keys(zones).forEach(zoneId => {
+        const zone = zones[zoneId];
+        const zoneTables = Object.values(tables).filter(table => table.zoneId === zoneId);
+        
+        const zoneElement = document.createElement('div');
+        zoneElement.className = 'zone-card';
+        zoneElement.innerHTML = `
+          <div class="zone-header">
+            <div class="zone-title">${zone.name} (${zone.code})</div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div class="zone-status ${zone.status === 'active' ? 'active' : 'inactive'}">
+                ${zone.status === 'active' ? 'Hoạt động' : 'Ngừng hoạt động'}
+              </div>
+              <div class="zone-actions">
+                <button class="action-btn edit" title="Chỉnh sửa" onclick="openEditZoneModal('${zoneId}')">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button class="action-btn delete" title="Xóa" onclick="deleteZone('${zoneId}')">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="tables-container" id="tables-${zoneId}">
+            <!-- Tables will be added here -->
+          </div>
+          <button class="btn btn-primary add-table-btn" onclick="openAddTableModal('${zoneId}')">
+            <i class="fas fa-plus"></i> Thêm bàn
+          </button>
+        `;
+        
+        zonesList.appendChild(zoneElement);
+        
+        const tablesContainer = document.getElementById(`tables-${zoneId}`);
+        tablesContainer.innerHTML = '';
+        
+        if (zoneTables.length === 0) {
+          tablesContainer.innerHTML = `<div class="empty-state" style="padding: 15px;">Chưa có bàn nào</div>`;
+        } else {
+          zoneTables.forEach(table => {
+            const tableCard = document.createElement('div');
+            tableCard.className = `table-card ${table.status}`;
+            tableCard.onclick = () => openEditTableModal(table.id);
+            tableCard.innerHTML = `
+              <div class="table-name">${table.name}</div>
+              <div class="table-capacity">${table.capacity} chỗ</div>
+              <div class="table-status">${getTableStatusLabel(table.status)}</div>
+              <div class="table-code">${table.code}</div>
+            `;
+            
+            tablesContainer.appendChild(tableCard);
+          });
+        }
+      });
+      
+      // Update buttons based on limits
+      updateZoneButtons();
+    }
+    
+    // Get table status label
+    function getTableStatusLabel(status) {
+      switch(status) {
+        case 'empty': return 'Đang trống';
+        case 'in-use': return 'Đang sử dụng';
+        case 'reserved': return 'Đã đặt trước';
+        case 'disabled': return 'Vô hiệu hóa';
+        default: return status;
+      }
+    }
+    
+    // Update zone stats
+    function updateZoneStats() {
+      const totalZones = Object.keys(zones).length;
+      const totalTables = Object.keys(tables).length;
+      
+      let emptyTables = 0;
+      let inUseTables = 0;
+      let reservedTables = 0;
+      
+      Object.values(tables).forEach(table => {
+        switch(table.status) {
+          case 'empty': emptyTables++; break;
+          case 'in-use': inUseTables++; break;
+          case 'reserved': reservedTables++; break;
+        }
+      });
+      
+      document.getElementById('total-zones').textContent = totalZones;
+      document.getElementById('total-tables').textContent = totalTables;
+      document.getElementById('empty-tables').textContent = emptyTables;
+      document.getElementById('in-use-tables').textContent = inUseTables;
+      document.getElementById('reserved-tables').textContent = reservedTables;
+    }
+    
+    // Populate zone dropdown
+    function populateZoneDropdown() {
+      const zoneDropdown = document.getElementById('table-zone');
+      zoneDropdown.innerHTML = '';
+      
+      Object.keys(zones).forEach(zoneId => {
+        const zone = zones[zoneId];
+        if (zone.status === 'active') {
+          const option = document.createElement('option');
+          option.value = zoneId;
+          option.textContent = `${zone.name} (${zone.code})`;
+          zoneDropdown.appendChild(option);
+        }
+      });
+    }
+    
+    // Render items
+    function renderItems() {
+      const itemsList = document.getElementById('items-list');
+      itemsList.innerHTML = '';
+      
+      Object.keys(items).forEach(itemId => {
+        const item = items[itemId];
+        
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${item.code}</td>
+          <td>${item.name}</td>
+          <td>${getItemTypeLabel(item.type)}</td>
+          <td>${item.quantity} ${item.unit}</td>
+          <td>
+            <span class="status-badge ${getItemStatusClass(item.status)}">
+              ${getItemStatusLabel(item.status)}
+            </span>
+          </td>
+          <td class="action-buttons">
+            <button class="action-btn edit" title="Chỉnh sửa" onclick="editItem('${itemId}')">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button class="action-btn delete" title="Xóa" onclick="deleteItem('${itemId}')">
+              <i class="fas fa-trash"></i>
+            </button>
+          </td>
+        `;
+        
+        itemsList.appendChild(row);
+      });
+      
+      // Show empty state if no items
+      document.getElementById('empty-item-state').style.display = 
+        Object.keys(items).length === 0 ? 'block' : 'none';
+    }
+    
+    function getItemTypeLabel(type) {
+      switch(type) {
+        case 'ingredient': return 'Nguyên liệu';
+        case 'supply': return 'Vật dụng';
+        case 'other': return 'Khác';
+        default: return type;
+      }
+    }
+    
+    function getItemStatusLabel(status) {
+      switch(status) {
+        case 'available': return 'Còn hàng';
+        case 'low': return 'Sắp hết';
+        case 'out': return 'Hết hàng';
+        default: return status;
+      }
+    }
+    
+    function getItemStatusClass(status) {
+      switch(status) {
+        case 'available': return 'status-active';
+        case 'low': return 'status-warning';
+        case 'out': return 'status-inactive';
+        default: return '';
+      }
+    }
+    
+    // Render shifts
+    function renderShifts() {
+      const shiftsList = document.getElementById('shifts-list');
+      shiftsList.innerHTML = '';
+      
+      Object.keys(shifts).forEach(shiftId => {
+        const shift = shifts[shiftId];
+        
+        // Calculate total hours
+        const startTime = new Date(`2000-01-01T${shift.startTime}`);
+        const endTime = new Date(`2000-01-01T${shift.endTime}`);
+        const diffMs = endTime - startTime;
+        const diffHrs = Math.floor((diffMs % 86400000) / 3600000);
+        const diffMins = Math.round(((diffMs % 86400000) % 3600000) / 60000);
+        const totalHours = `${diffHrs} giờ ${diffMins} phút`;
+        
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${shift.code}</td>
+          <td>${shift.name}</td>
+          <td>${shift.startTime}</td>
+          <td>${shift.endTime}</td>
+          <td>${totalHours}</td>
+          <td class="action-buttons">
+            <button class="action-btn edit" title="Chỉnh sửa" onclick="editShift('${shiftId}')">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button class="action-btn delete" title="Xóa" onclick="deleteShift('${shiftId}')">
+              <i class="fas fa-trash"></i>
+            </button>
+          </td>
+        `;
+        
+        shiftsList.appendChild(row);
+      });
+      
+      // Show empty state if no shifts
+      document.getElementById('empty-shift-state').style.display = 
+        Object.keys(shifts).length === 0 ? 'block' : 'none';
+    }
+    
+    // Open modals
+    function openAddZoneModal() {
+      // Check zone limit
+      const limits = accountLimits[currentUserRole] || accountLimits['admin base'];
+      if (Object.keys(zones).length >= limits.zones) {
+        showToast(`Bạn đã đạt giới hạn tối đa ${limits.zones} khu vực`, 'error');
+        return;
+      }
+      
+      document.getElementById('zone-modal-title').textContent = 'Thêm khu vực mới';
+      document.getElementById('zone-save-btn').textContent = 'Lưu';
+      document.getElementById('zone-save-btn').onclick = saveZone;
+      
+      document.getElementById('add-zone-modal').style.display = 'flex';
+      document.getElementById('zone-code').focus();
+    }
+    
+    function openEditZoneModal(zoneId) {
+      const zone = zones[zoneId];
+      if (!zone) return;
+      
+      document.getElementById('zone-code').value = zone.code;
+      document.getElementById('zone-name').value = zone.name;
+      document.getElementById('zone-status').value = zone.status;
+      
+      currentEditingZoneId = zoneId;
+      
+      document.getElementById('zone-modal-title').textContent = 'Chỉnh sửa khu vực';
+      document.getElementById('zone-save-btn').textContent = 'Cập nhật';
+      document.getElementById('zone-save-btn').onclick = saveEditedZone;
+      
+      document.getElementById('add-zone-modal').style.display = 'flex';
+    }
+    
+    function openAddTableModal(zoneId = '') {
+      if (Object.keys(zones).length === 0) {
+        showToast('Vui lòng tạo ít nhất một khu vực trước', 'error');
+        return;
+      }
+      
+      // Reset form
+      resetTableForm();
+      
+      // Set the zone if provided
+      if (zoneId) {
+        document.getElementById('table-zone').value = zoneId;
+      }
+      
+      // Set modal title
+      document.getElementById('table-modal-title').textContent = 'Thêm bàn mới';
+      document.getElementById('table-save-btn').textContent = 'Lưu';
+      document.getElementById('table-save-btn').onclick = saveTable;
+      
+      // Đặt trạng thái mặc định là "empty" và vô hiệu hóa dropdown
+      document.getElementById('table-status').value = 'empty';
+      document.getElementById('table-status').disabled = true;
+      
+      // Show modal
+      document.getElementById('table-modal').style.display = 'flex';
+      document.getElementById('table-name').focus();
+    }
+    
+    function openEditTableModal(tableId) {
+      const table = tables[tableId];
+      if (!table) return;
+
+      // Set current editing table
+      currentEditingTable = tableId;
+
+      // Set form values
+      document.getElementById('table-zone').value = table.zoneId;
+      document.getElementById('table-code').value = table.code;
+      document.getElementById('table-name').value = table.name;
+      document.getElementById('table-capacity').value = table.capacity;
+      
+      // Xử lý dropdown trạng thái dựa trên trạng thái hiện tại
+      const statusDropdown = document.getElementById('table-status');
+      statusDropdown.disabled = false;
+      statusDropdown.innerHTML = '';
+      
+      // Nếu bàn đang ở trạng thái "in-use" hoặc "reserved"
+      if (table.status === 'in-use' || table.status === 'reserved') {
+        // Vô hiệu hóa dropdown và chỉ hiển thị trạng thái hiện tại
+        const currentOption = document.createElement('option');
+        currentOption.value = table.status;
+        currentOption.textContent = getTableStatusLabel(table.status);
+        statusDropdown.appendChild(currentOption);
+        statusDropdown.disabled = true;
+      } else {
+        // Cho phép chuyển sang "disabled" hoặc giữ nguyên "empty"
+        const emptyOption = document.createElement('option');
+        emptyOption.value = 'empty';
+        emptyOption.textContent = 'Đang trống';
+        statusDropdown.appendChild(emptyOption);
+        
+        const disabledOption = document.createElement('option');
+        disabledOption.value = 'disabled';
+        disabledOption.textContent = 'Vô hiệu hóa';
+        statusDropdown.appendChild(disabledOption);
+      }
+      
+      // Đặt giá trị hiện tại
+      statusDropdown.value = table.status;
+
+      // Set modal title
+      document.getElementById('table-modal-title').textContent = 'Chỉnh sửa bàn';
+      document.getElementById('table-save-btn').textContent = 'Cập nhật';
+      document.getElementById('table-save-btn').onclick = updateTable;
+
+      // Show modal
+      document.getElementById('table-modal').style.display = 'flex';
+    }
+    
+    function openAddItemModal() {
+      // Check item limit
+      const limits = accountLimits[currentUserRole] || accountLimits['admin base'];
+      if (Object.keys(items).length >= limits.items) {
+        showToast(`Bạn đã đạt giới hạn tối đa ${limits.items} hàng hóa`, 'error');
+        return;
+      }
+      
+      document.getElementById('add-item-modal').style.display = 'flex';
+      document.getElementById('item-code').focus();
+    }
+    
+    function openAddShiftModal() {
+      // Check shift limit
+      const limits = accountLimits[currentUserRole] || accountLimits['admin base'];
+      if (Object.keys(shifts).length >= limits.shifts) {
+        showToast(`Bạn đã đạt giới hạn tối đa ${limits.shifts} ca làm`, 'error');
+        return;
+      }
+      
+      document.getElementById('add-shift-modal').style.display = 'flex';
+      document.getElementById('shift-code').focus();
+    }
+    
+    // Close modals
+    function closeAddZoneModal() {
+      document.getElementById('add-zone-modal').style.display = 'none';
+      resetZoneForm();
+      currentEditingZoneId = null;
+    }
+    
+    function closeTableModal() {
+      document.getElementById('table-modal').style.display = 'none';
+      resetTableForm();
+      currentEditingTable = null;
+    }
+    
+    function closeAddItemModal() {
+      document.getElementById('add-item-modal').style.display = 'none';
+      resetItemForm();
+    }
+    
+    function closeAddShiftModal() {
+      document.getElementById('add-shift-modal').style.display = 'none';
+      resetShiftForm();
+    }
+    
+    // Reset forms
+    function resetZoneForm() {
+      document.getElementById('zone-code').value = '';
+      document.getElementById('zone-name').value = '';
+      document.getElementById('zone-status').value = 'active';
+    }
+    
+    function resetTableForm() {
+      document.getElementById('table-code').value = '';
+      document.getElementById('table-name').value = '';
+      document.getElementById('table-capacity').value = '';
+      document.getElementById('table-status').value = 'empty';
+      document.getElementById('table-status').disabled = false;
+    }
+    
+    function resetItemForm() {
+      document.getElementById('item-code').value = '';
+      document.getElementById('item-name').value = '';
+      document.getElementById('item-type').value = 'ingredient';
+      document.getElementById('item-quantity').value = '';
+      document.getElementById('item-unit').value = 'kg';
+      document.getElementById('item-status').value = 'available';
+    }
+    
+    function resetShiftForm() {
+      document.getElementById('shift-code').value = '';
+      document.getElementById('shift-name').value = '';
+      document.getElementById('shift-start').value = '';
+      document.getElementById('shift-end').value = '';
+    }
+    
+    // Save functions
+    function saveZone() {
+      const code = document.getElementById('zone-code').value.trim();
+      const name = document.getElementById('zone-name').value.trim();
+      const status = document.getElementById('zone-status').value;
+      
+      if (!code || !name) {
+        showToast('Vui lòng điền đầy đủ thông tin', 'error');
+        return;
+      }
+      
+      // Check if code and name are different
+      if (code === name) {
+        showToast('Mã khu vực và tên khu vực không được giống nhau', 'error');
+        return;
+      }
+      
+      // Check zone limit
+      const limits = accountLimits[currentUserRole] || accountLimits['admin base'];
+      if (Object.keys(zones).length >= limits.zones) {
+        showToast(`Bạn đã đạt giới hạn tối đa ${limits.zones} khu vực`, 'error');
+        return;
+      }
+      
+      // KIỂM TRA TRÙNG MÃ KHU VỰC (TOÀN HỆ THỐNG)
+      const isCodeDuplicate = Object.values(zones).some(zone => zone.code === code);
+      if (isCodeDuplicate) {
+        showToast('Mã khu vực đã tồn tại', 'error');
+        return;
+      }
+      
+      // KIỂM TRA TRÙNG TÊN KHU VỰC (TOÀN HỆ THỐNG)
+      const isNameDuplicate = Object.values(zones).some(zone => zone.name === name);
+      if (isNameDuplicate) {
+        showToast('Tên khu vực đã tồn tại', 'error');
+        return;
+      }
+      
+      const zoneData = {
+        code,
+        name,
+        status
+      };
+      
+      const zoneRef = database.ref(`users/${currentUser.uid}/branches/${currentBranchCode}/local/zones`).push();
+      zoneRef.set(zoneData)
+        .then(() => {
+          closeAddZoneModal();
+          showToast('Thêm khu vực thành công!', 'success');
+        })
+        .catch(error => {
+          console.error('Error saving zone:', error);
+          showToast('Có lỗi xảy ra: ' + error.message, 'error');
+        });
+    }
+    
+    function saveEditedZone() {
+      if (!currentEditingZoneId) return;
+      
+      const code = document.getElementById('zone-code').value.trim();
+      const name = document.getElementById('zone-name').value.trim();
+      const status = document.getElementById('zone-status').value;
+      
+      if (!code || !name) {
+        showToast('Vui lòng điền đầy đủ thông tin', 'error');
+        return;
+      }
+      
+      // Check if code and name are different
+      if (code === name) {
+        showToast('Mã khu vực và tên khu vực không được giống nhau', 'error');
+        return;
+      }
+      
+      // Check if zone has active tables when changing to inactive
+      if (status === 'inactive') {
+        const zoneTables = Object.values(tables).filter(table => table.zoneId === currentEditingZoneId);
+        const hasActiveTables = zoneTables.some(table => 
+          table.status === 'in-use' || table.status === 'reserved'
+        );
+        
+        if (hasActiveTables) {
+          showToast('Không thể ngừng hoạt động khu vực vì có bàn đang sử dụng hoặc đã đặt trước', 'error');
+          return;
+        }
+      }
+      
+      // KIỂM TRA TRÙNG MÃ KHU VỰC (TRỪ KHU VỰC HIỆN TẠI)
+      const isCodeDuplicate = Object.entries(zones).some(
+        ([id, zone]) => id !== currentEditingZoneId && zone.code === code
+      );
+      if (isCodeDuplicate) {
+        showToast('Mã khu vực đã tồn tại', 'error');
+        return;
+      }
+      
+      // KIỂM TRA TRÙNG TÊN KHU VỰC (TRỪ KHU VỰC HIỆN TẠI)
+      const isNameDuplicate = Object.entries(zones).some(
+        ([id, zone]) => id !== currentEditingZoneId && zone.name === name
+      );
+      if (isNameDuplicate) {
+        showToast('Tên khu vực đã tồn tại', 'error');
+        return;
+      }
+      
+      const updatedData = {
+        code,
+        name,
+        status
+      };
+      
+      database.ref(`users/${currentUser.uid}/branches/${currentBranchCode}/local/zones/${currentEditingZoneId}`).update(updatedData)
+        .then(() => {
+          closeAddZoneModal();
+          showToast('Cập nhật khu vực thành công!', 'success');
+        })
+        .catch(error => {
+          console.error('Error updating zone:', error);
+          showToast('Có lỗi xảy ra: ' + error.message, 'error');
+        });
+    }
+    
+    function saveTable() {
+      const zoneId = document.getElementById('table-zone').value;
+      const code = document.getElementById('table-code').value.trim();
+      const name = document.getElementById('table-name').value.trim();
+      const capacity = parseInt(document.getElementById('table-capacity').value);
+      const status = document.getElementById('table-status').value;
+      
+      if (!zoneId || !code || !name || !capacity) {
+        showToast('Vui lòng điền đầy đủ thông tin', 'error');
+        return;
+      }
+      
+      // Check capacity
+      if (capacity < 1) {
+        showToast('Sức chứa phải lớn hơn 0', 'error');
+        return;
+      }
+      
+      // Check for duplicate table code in the same zone
+      const tablesInZone = Object.values(tables).filter(table => table.zoneId === zoneId);
+      const isCodeDuplicate = tablesInZone.some(table => table.code === code);
+      
+      if (isCodeDuplicate) {
+        showToast('Mã bàn đã tồn tại trong khu vực này', 'error');
+        return;
+      }
+      
+      // Check for duplicate table name in the same zone
+      const isNameDuplicate = tablesInZone.some(table => table.name === name);
+      
+      if (isNameDuplicate) {
+        showToast('Tên bàn đã tồn tại trong khu vực này', 'error');
+        return;
+      }
+      
+      // Check table limit for this zone
+      const limits = accountLimits[currentUserRole] || accountLimits['admin base'];
+      if (tablesInZone.length >= limits.tablesPerZone) {
+        showToast(`Khu vực này đã đạt giới hạn tối đa ${limits.tablesPerZone} bàn`, 'error');
+        return;
+      }
+      
+      const tableData = {
+        zoneId,
+        code,
+        name,
+        capacity,
+        status
+      };
+      
+      const tableRef = database.ref(`users/${currentUser.uid}/branches/${currentBranchCode}/local/tables`).push();
+      tableRef.set(tableData)
+        .then(() => {
+          closeTableModal();
+          showToast('Thêm bàn thành công!', 'success');
+        })
+        .catch(error => {
+          console.error('Error saving table:', error);
+          showToast('Có lỗi xảy ra: ' + error.message, 'error');
+        });
+    }
+    
+    function updateTable() {
+      if (!currentEditingTable) return;
+      
+      const table = tables[currentEditingTable];
+      if (!table) return;
+      
+      const zoneId = document.getElementById('table-zone').value;
+      const code = document.getElementById('table-code').value.trim();
+      const name = document.getElementById('table-name').value.trim();
+      const capacity = parseInt(document.getElementById('table-capacity').value);
+      const status = document.getElementById('table-status').value;
+      
+      if (!zoneId || !code || !name || !capacity) {
+        showToast('Vui lòng điền đầy đủ thông tin', 'error');
+        return;
+      }
+      
+      // Check capacity
+      if (capacity < 1) {
+        showToast('Sức chứa phải lớn hơn 1', 'error');
+        return;
+      }
+      
+      // Check for duplicate table code in the same zone (excluding current table)
+      const tablesInZone = Object.values(tables).filter(table => 
+        table.zoneId === zoneId && table.id !== currentEditingTable
+      );
+      const isCodeDuplicate = tablesInZone.some(table => table.code === code);
+      
+      if (isCodeDuplicate) {
+        showToast('Mã bàn đã tồn tại trong khu vực này', 'error');
+        return;
+      }
+      
+      // Check for duplicate table name in the same zone (excluding current table)
+      const isNameDuplicate = tablesInZone.some(table => table.name === name);
+      
+      if (isNameDuplicate) {
+        showToast('Tên bàn đã tồn tại trong khu vực này', 'error');
+        return;
+      }
+      
+      // Kiểm tra không cho chuyển từ "in-use" hoặc "reserved" sang "disabled"
+      if ((table.status === 'in-use' || table.status === 'reserved') && 
+          (status === 'disabled' || status === 'empty')) {
+        showToast('Không thể thay đổi trạng thái bàn đang sử dụng hoặc đã đặt trước', 'error');
+        return;
+      }
+      
+      const updatedData = {
+        zoneId,
+        code,
+        name,
+        capacity,
+        status
+      };
+      
+      database.ref(`users/${currentUser.uid}/branches/${currentBranchCode}/local/tables/${currentEditingTable}`).update(updatedData)
+        .then(() => {
+          closeTableModal();
+          showToast('Cập nhật bàn thành công!', 'success');
+        })
+        .catch(error => {
+          console.error('Error updating table:', error);
+          showToast('Có lỗi xảy ra: ' + error.message, 'error');
+        });
+    }
+    
+    function saveItem() {
+      const code = document.getElementById('item-code').value.trim();
+      const name = document.getElementById('item-name').value.trim();
+      const type = document.getElementById('item-type').value;
+      const quantity = parseFloat(document.getElementById('item-quantity').value);
+      const unit = document.getElementById('item-unit').value;
+      const status = document.getElementById('item-status').value;
+      
+      if (!code || !name || isNaN(quantity)) {
+        showToast('Vui lòng điền đầy đủ thông tin', 'error');
+        return;
+      }
+      
+      // Check item limit
+      const limits = accountLimits[currentUserRole] || accountLimits['admin base'];
+      if (Object.keys(items).length >= limits.items) {
+        showToast(`Bạn đã đạt giới hạn tối đa ${limits.items} hàng hóa`, 'error');
+        return;
+      }
+      
+      const itemData = {
+        code,
+        name,
+        type,
+        quantity,
+        unit,
+        status
+      };
+      
+      const itemRef = database.ref(`users/${currentUser.uid}/branches/${currentBranchCode}/warehouse`).push();
+      itemRef.set(itemData)
+        .then(() => {
+          closeAddItemModal();
+          showToast('Thêm hàng hóa thành công!', 'success');
+        })
+        .catch(error => {
+          console.error('Error saving item:', error);
+          showToast('Có lỗi xảy ra: ' + error.message, 'error');
+        });
+    }
+    
+    function saveShift() {
+      const code = document.getElementById('shift-code').value.trim();
+      const name = document.getElementById('shift-name').value.trim();
+      const startTime = document.getElementById('shift-start').value;
+      const endTime = document.getElementById('shift-end').value;
+      
+      if (!code || !name || !startTime || !endTime) {
+        showToast('Vui lòng điền đầy đủ thông tin', 'error');
+        return;
+      }
+      
+      if (startTime >= endTime) {
+        showToast('Giờ bắt đầu phải trước giờ kết thúc', 'error');
+        return;
+      }
+      
+      // Check shift limit
+      const limits = accountLimits[currentUserRole] || accountLimits['admin base'];
+      if (Object.keys(shifts).length >= limits.shifts) {
+        showToast(`Bạn đã đạt giới hạn tối đa ${limits.shifts} ca làm`, 'error');
+        return;
+      }
+      
+      const shiftData = {
+        code,
+        name,
+        startTime,
+        endTime
+      };
+      
+      const shiftRef = database.ref(`users/${currentUser.uid}/branches/${currentBranchCode}/shifts`).push();
+      shiftRef.set(shiftData)
+        .then(() => {
+          closeAddShiftModal();
+          showToast('Thêm ca làm thành công!', 'success');
+        })
+        .catch(error => {
+          console.error('Error saving shift:', error);
+          showToast('Có lỗi xảy ra: ' + error.message, 'error');
+        });
+    }
+    
+    // Delete zone
+    function deleteZone(zoneId) {
+      const zone = zones[zoneId];
+      if (!zone) return;
+      
+      // Check if zone has active tables
+      const zoneTables = Object.values(tables).filter(table => table.zoneId === zoneId);
+      const hasActiveTables = zoneTables.some(table => 
+        table.status === 'in-use' || table.status === 'reserved'
+      );
+      
+      if (hasActiveTables) {
+        showToast('Không thể xóa khu vực vì có bàn đang sử dụng hoặc đã đặt trước', 'error');
+        return;
+      }
+      
+      if (confirm(`Bạn có chắc chắn muốn xóa khu vực "${zone.name}"?`)) {
+        // Delete all tables in this zone first
+        const deleteTablePromises = [];
+        
+        zoneTables.forEach(table => {
+          deleteTablePromises.push(
+            database.ref(`users/${currentUser.uid}/branches/${currentBranchCode}/local/tables/${table.id}`).remove()
+          );
+        });
+        
+        Promise.all(deleteTablePromises)
+          .then(() => {
+            // Delete the zone
+            return database.ref(`users/${currentUser.uid}/branches/${currentBranchCode}/local/zones/${zoneId}`).remove();
+          })
+          .then(() => {
+            showToast('Xóa khu vực thành công!', 'success');
+          })
+          .catch(error => {
+            console.error('Error deleting zone:', error);
+            showToast('Có lỗi xảy ra: ' + error.message, 'error');
+          });
+      }
+    }
+    
+    // Update buttons based on limits
+    function updateZoneButtons() {
+      const limits = accountLimits[currentUserRole] || accountLimits['admin base'];
+      const addZoneBtn = document.getElementById('add-zone-btn');
+      
+      if (Object.keys(zones).length >= limits.zones) {
+        addZoneBtn.disabled = true;
+        addZoneBtn.classList.add('disabled');
+      } else {
+        addZoneBtn.disabled = false;
+        addZoneBtn.classList.remove('disabled');
+      }
+    }
+    
+    function updateItemButtons() {
+      const limits = accountLimits[currentUserRole] || accountLimits['admin base'];
+      const addItemBtn = document.getElementById('add-item-btn');
+      const addFirstItemBtn = document.getElementById('add-first-item-btn');
+      
+      if (Object.keys(items).length >= limits.items) {
+        addItemBtn.disabled = true;
+        addItemBtn.classList.add('disabled');
+        if (addFirstItemBtn) addFirstItemBtn.disabled = true;
+        if (addFirstItemBtn) addFirstItemBtn.classList.add('disabled');
+      } else {
+        addItemBtn.disabled = false;
+        addItemBtn.classList.remove('disabled');
+        if (addFirstItemBtn) addFirstItemBtn.disabled = false;
+        if (addFirstItemBtn) addFirstItemBtn.classList.remove('disabled');
+      }
+    }
+    
+    function updateShiftButtons() {
+      const limits = accountLimits[currentUserRole] || accountLimits['admin base'];
+      const addShiftBtn = document.getElementById('add-shift-btn');
+      const addFirstShiftBtn = document.getElementById('add-first-shift-btn');
+      
+      if (Object.keys(shifts).length >= limits.shifts) {
+        addShiftBtn.disabled = true;
+        addShiftBtn.classList.add('disabled');
+        if (addFirstShiftBtn) addFirstShiftBtn.disabled = true;
+        if (addFirstShiftBtn) addFirstShiftBtn.classList.add('disabled');
+      } else {
+        addShiftBtn.disabled = false;
+        addShiftBtn.classList.remove('disabled');
+        if (addFirstShiftBtn) addFirstShiftBtn.disabled = false;
+        if (addFirstShiftBtn) addFirstShiftBtn.classList.remove('disabled');
+      }
+    }
+    
+    // Show toast notification
+    function showToast(message, type) {
+      // Remove existing toasts
+      const existingToasts = document.querySelectorAll('.toast');
+      existingToasts.forEach(toast => toast.remove());
+      
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.innerHTML = `
+        <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-exclamation-triangle'}"></i>
+        <span>${message}</span>
+      `;
+      
+      document.body.appendChild(toast);
+      
+      // Auto remove after 3 seconds
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+    
+    // Load notifications for current user
+    function loadNotifications() {
+      if (!currentUser) return;
+      
+      const notificationsRef = database.ref(`users/${currentUser.uid}/notifications`).orderByChild('timestamp').limitToLast(20);
+      
+      notificationsRef.on('value', snapshot => {
+        const notifications = snapshot.val() || {};
+        let unreadCount = 0;
+        
+        // Clear existing notifications
+        notificationList.innerHTML = '';
+        
+        // Convert to array and sort by timestamp
+        const notificationArray = Object.entries(notifications).map(([key, value]) => {
+          return { id: key, ...value };
+        });
+        
+        // Sort by timestamp (newest first)
+        notificationArray.sort((a, b) => b.timestamp - a.timestamp);
+        
+        // Render each notification
+        notificationArray.forEach(notification => {
+          if (!notification.read) unreadCount++;
+          
+          const notificationItem = document.createElement('div');
+          notificationItem.className = 'notification-item';
+          notificationItem.dataset.id = notification.id;
+          
+          let iconClass = '';
+          let iconColor = '';
+          
+          switch (notification.iconType) {
+            case 'success':
+              iconClass = 'fa-check-circle';
+              iconColor = 'var(--success)';
+              break;
+            case 'error':
+              iconClass = 'fa-exclamation-circle';
+              iconColor = 'var(--accent)';
+              break;
+            case 'warning':
+              iconClass = 'fa-exclamation-triangle';
+              iconColor = 'var(--warning)';
+              break;
+            default:
+              iconClass = 'fa-info-circle';
+              iconColor = 'var(--secondary)';
+          }
+          
+          notificationItem.innerHTML = `
+            <div class="notification-title">
+              <i class="fas ${iconClass}" style="color: ${iconColor}"></i>
+              ${notification.title}
+            </div>
+            <div class="notification-content">${notification.content}</div>
+            <div class="notification-time">${formatTime(notification.timestamp)}</div>
+          `;
+          
+          notificationList.appendChild(notificationItem);
+        });
+        
+        // Update badge
+        notificationBadge.textContent = unreadCount;
+      });
+    }
+    
+    // Mark all notifications as read
+    function markNotificationsAsRead() {
+      if (!currentUser) return;
+      
+      const notificationsRef = database.ref(`users/${currentUser.uid}/notifications`);
+      
+      notificationsRef.once('value')
+        .then(snapshot => {
+          const notifications = snapshot.val() || {};
+          const updates = {};
+          
+          Object.keys(notifications).forEach(key => {
+            if (!notifications[key].read) {
+              updates[`${key}/read`] = true;
+            }
+          });
+          
+          if (Object.keys(updates).length > 0) {
+            notificationsRef.update(updates)
+              .then(() => {
+                // Update badge to 0
+                notificationBadge.textContent = '0';
+              })
+              .catch(error => {
+                console.error('Error marking notifications as read:', error);
+              });
+          }
+        });
+    }
+    
+    // Clear all notifications for current user
+    function clearNotifications() {
+      if (!currentUser) return;
+      
+      if (confirm('Bạn có chắc chắn muốn xóa tất cả thông báo?')) {
+        database.ref(`users/${currentUser.uid}/notifications`).remove()
+          .then(() => {
+            showToast('Đã xóa tất cả thông báo', 'success');
+          })
+          .catch(error => {
+            console.error('Error clearing notifications:', error);
+            showToast('Lỗi khi xóa thông báo: ' + error.message, 'error');
+          });
+      }
+    }
+  </script>
+</body>
+</html>

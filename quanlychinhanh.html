@@ -1,0 +1,1948 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Quản lý Chi nhánh - Foodiee Management</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <script src="https://ucarecdn.com/libs/widget/3.x/uploadcare.full.min.js"></script>
+  <style>
+    :root {
+      --primary: #2c3e50;
+      --secondary: #3498db;
+      --accent: #e74c3c;
+      --light: #ecf0f1;
+      --dark: #2c3e50;
+      --success: #2ecc71;
+      --warning: #f39c12;
+      --gray: #95a5a6;
+      --sidebar-width: 250px;
+      --sidebar-collapsed: 70px;
+      --transition-speed: 0.3s;
+    }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: #f5f7fa;
+      color: #333;
+      overflow-x: hidden;
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* Header */
+    .main-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 0;
+      border-bottom: 2px solid var(--secondary);
+      margin-bottom: 30px;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .notification-icon {
+      position: relative;
+      cursor: pointer;
+      font-size: 1.3rem;
+      color: var(--primary);
+      transition: transform 0.3s;
+    }
+
+    .notification-icon:hover {
+      transform: scale(1.1);
+      color: var(--accent);
+    }
+
+    .notification-badge {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      background: var(--accent);
+      color: white;
+      font-size: 0.7rem;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .user-profile {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+    }
+
+    .avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--secondary), var(--primary));
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      font-weight: bold;
+      font-size: 1.2rem;
+      background-size: cover;
+      background-position: center;
+    }
+
+    .user-name {
+      font-weight: 500;
+      color: var(--primary);
+    }
+
+    /* Sidebar */
+    .sidebar {
+      background: linear-gradient(135deg, var(--primary), #1a2530);
+      color: white;
+      width: var(--sidebar-width);
+      height: 100vh;
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 1000;
+      overflow-y: auto;
+      transition: all var(--transition-speed) ease;
+      box-shadow: 3px 0 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .sidebar.closed {
+      width: var(--sidebar-collapsed);
+    }
+
+    .toggle-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: white;
+      width: 100%;
+      padding: 15px;
+      cursor: pointer;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      transition: background 0.3s;
+    }
+
+    .toggle-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .toggle-btn i {
+      font-size: 1.5rem;
+      margin-right: 15px;
+    }
+
+    .sidebar.closed .toggle-btn i {
+      margin-right: 0;
+    }
+
+    .nav-menu {
+      padding: 15px 0;
+    }
+
+    .nav-menu ul {
+      list-style: none;
+    }
+
+    .nav-menu ul li {
+      position: relative;
+    }
+
+    .nav-menu ul li a {
+      color: rgba(255, 255, 255, 0.8);
+      text-decoration: none;
+      padding: 15px 20px;
+      display: flex;
+      align-items: center;
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .nav-menu ul li a:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+    }
+
+    .nav-menu ul li a.active {
+      background: rgba(255, 255, 255, 0.15);
+      color: white;
+      border-left: 4px solid var(--accent);
+    }
+
+    .nav-menu ul li a i {
+      font-size: 1.2rem;
+      min-width: 30px;
+      text-align: center;
+      transition: transform 0.3s;
+    }
+
+    .link-text {
+      margin-left: 15px;
+      transition: opacity var(--transition-speed), margin var(--transition-speed);
+      white-space: nowrap;
+    }
+
+    .sidebar.closed .link-text {
+      opacity: 0;
+      margin-left: -10px;
+      pointer-events: none;
+    }
+
+    /* Submenu */
+    .submenu {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease-out;
+      background: rgba(0, 0, 0, 0.15);
+      padding-left: 0;
+    }
+
+    .submenu.show {
+      max-height: 500px;
+    }
+
+    .submenu li a {
+      padding: 12px 20px 12px 60px !important;
+      font-size: 0.9rem;
+    }
+
+    .submenu li a i {
+      font-size: 0.9rem;
+    }
+
+    /* Fix submenu khi sidebar đóng */
+    .sidebar.closed .submenu {
+      position: absolute;
+      left: 100%;
+      top: 0;
+      min-width: 200px;
+      background: #2c3e50;
+      border-radius: 0 8px 8px 0;
+      box-shadow: 3px 3px 10px rgba(0,0,0,0.2);
+      z-index: 1001;
+    }
+
+    .sidebar.closed .submenu.show {
+      max-height: none;
+      display: block;
+    }
+
+    .sidebar.closed .submenu li a {
+      padding: 12px 15px !important;
+    }
+
+    .sidebar.closed .submenu .link-text {
+      opacity: 1;
+      margin-left: 10px;
+      pointer-events: auto;
+    }
+
+    /* Main content */
+    main {
+      flex: 1;
+      padding: 30px;
+      margin-left: var(--sidebar-width);
+      transition: margin var(--transition-speed);
+      overflow-y: auto;
+      max-height: 100vh;
+    }
+
+    .sidebar.closed + main {
+      margin-left: var(--sidebar-collapsed);
+    }
+
+    h1 {
+      color: var(--primary);
+      font-weight: 600;
+    }
+    
+    /* Branch Management Styles */
+    .branch-container {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+      overflow: hidden;
+      margin-bottom: 30px;
+    }
+    
+    .branch-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .btn {
+      padding: 10px 20px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.3s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .btn-primary {
+      background: var(--secondary);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: #2980b9;
+    }
+    
+    .btn-success {
+      background: var(--success);
+      color: white;
+    }
+    
+    .btn-success:hover {
+      background: #27ae60;
+    }
+    
+    .btn-danger {
+      background: var(--accent);
+      color: white;
+    }
+    
+    .btn-danger:hover {
+      background: #c0392b;
+    }
+    
+    .branch-controls {
+      display: flex;
+      gap: 15px;
+      padding: 20px;
+      background: #f8f9fa;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .search-box {
+      flex: 1;
+      position: relative;
+    }
+    
+    .search-box input {
+      width: 100%;
+      padding: 10px 15px 10px 40px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 1rem;
+      transition: all 0.3s;
+    }
+    
+    .search-box input:focus {
+      outline: none;
+      border-color: var(--secondary);
+      box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+    }
+    
+    .search-box i {
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--gray);
+    }
+    
+    .branch-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    
+    .branch-table th {
+      background: var(--light);
+      padding: 15px;
+      text-align: left;
+      color: var(--primary);
+      font-weight: 600;
+      border-bottom: 2px solid #ddd;
+    }
+    
+    .branch-table td {
+      padding: 15px;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .branch-table tr:hover {
+      background: #f9f9f9;
+    }
+    
+    .status-badge {
+      padding: 5px 10px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+    
+    .status-active {
+      background: rgba(46, 204, 113, 0.15);
+      color: var(--success);
+    }
+    
+    .status-inactive {
+      background: rgba(231, 76, 60, 0.15);
+      color: var(--accent);
+    }
+    
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+    }
+    
+    .action-btn {
+      padding: 5px 10px;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .action-btn.edit {
+      background: rgba(52, 152, 219, 0.15);
+      color: var(--secondary);
+    }
+    
+    .action-btn.edit:hover {
+      background: var(--secondary);
+      color: white;
+    }
+    
+    .action-btn.delete {
+      background: rgba(231, 76, 60, 0.15);
+      color: var(--accent);
+    }
+    
+    .action-btn.delete:hover {
+      background: var(--accent);
+      color: white;
+    }
+
+    .action-btn.disabled {
+      background: rgba(149, 165, 166, 0.15);
+      color: var(--gray);
+      cursor: not-allowed;
+    }
+    
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 2000;
+      justify-content: center;
+      align-items: center;
+      overflow: auto;
+    }
+    
+    .modal-content {
+      background: white;
+      width: 90%;
+      max-width: 500px;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      animation: modalAppear 0.3s ease;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .coordinates-result {
+      background: #f8f9fa;
+      border-radius: 6px;
+      padding: 10px;
+      margin-top: 10px;
+      border-left: 3px solid var(--secondary);
+    }
+    
+    .coordinates-result p {
+      margin: 5px 0;
+    }
+    
+    .coordinates-result.success {
+      border-left-color: var(--success);
+    }
+    
+    .coordinates-result.error {
+      border-left-color: var(--accent);
+    }
+    
+    @keyframes modalAppear {
+      from { transform: translateY(-20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    
+    .modal-header {
+      padding: 20px;
+      background: var(--primary);
+      color: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    
+    .modal-header h3 {
+      font-weight: 500;
+    }
+    
+    .close-btn {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 1.5rem;
+      cursor: pointer;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: background 0.3s;
+    }
+    
+    .close-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+    
+    .modal-body {
+      padding: 20px;
+      overflow-y: auto;
+      flex: 1;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: var(--dark);
+    }
+    
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 12px 15px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 1rem;
+      transition: all 0.3s;
+    }
+    
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: var(--secondary);
+      box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+    }
+    
+    .form-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      padding: 20px;
+      border-top: 1px solid #eee;
+      flex-shrink: 0;
+    }
+    
+    /* Uploadcare Image Upload */
+    .uploadcare-widget-button {
+      background: var(--secondary) !important;
+      border-radius: 4px !important;
+    }
+    
+    .image-preview {
+      margin-top: 15px;
+      text-align: center;
+    }
+    
+    .image-preview img {
+      max-width: 100%;
+      max-height: 200px;
+      border-radius: 8px;
+      border: 1px solid #eee;
+      margin-top: 10px;
+    }
+    
+    .image-placeholder {
+      border: 2px dashed #ddd;
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      color: var(--gray);
+      margin-top: 10px;
+      background: #f9f9f9;
+    }
+    
+    .image-placeholder i {
+      font-size: 2rem;
+      margin-bottom: 10px;
+      display: block;
+      color: var(--gray);
+    }
+
+    /* Toast notification */
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      padding: 15px 25px;
+      border-radius: 8px;
+      color: white;
+      font-weight: 500;
+      z-index: 3000;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+      animation: toastSlideIn 0.3s ease-out;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .toast.error {
+      background: var(--accent);
+    }
+    
+    .toast.success {
+      background: var(--success);
+    }
+    
+    .toast.warning {
+      background: var(--warning);
+    }
+    
+    @keyframes toastSlideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    /* Notification Panel */
+    .notification-panel {
+      position: fixed;
+      top: 0;
+      right: -400px;
+      width: 380px;
+      height: 100vh;
+      background: white;
+      box-shadow: -5px 0 15px rgba(0,0,0,0.1);
+      z-index: 2500;
+      transition: right 0.3s ease;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .notification-panel.open {
+      right: 0;
+    }
+    
+    .notification-header {
+      background: var(--primary);
+      color: white;
+      padding: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .notification-header h3 {
+      font-size: 1.2rem;
+      font-weight: 500;
+    }
+    
+    .close-notifications {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+    
+    .notification-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 15px;
+    }
+    
+    .notification-item {
+      padding: 15px;
+      border-bottom: 1px solid #eee;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    
+    .notification-item:hover {
+      background: #f9f9f9;
+    }
+    
+    .notification-title {
+      font-weight: 600;
+      margin-bottom: 5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .notification-title i {
+      font-size: 0.9rem;
+    }
+    
+    .notification-content {
+      font-size: 0.9rem;
+      color: #555;
+      margin-bottom: 5px;
+    }
+    
+    .notification-time {
+      font-size: 0.8rem;
+      color: var(--gray);
+      text-align: right;
+    }
+    
+    .notification-footer {
+      padding: 15px;
+      text-align: center;
+      border-top: 1px solid #eee;
+    }
+    
+    .clear-notifications {
+      background: none;
+      border: none;
+      color: var(--accent);
+      cursor: pointer;
+      font-weight: 500;
+    }
+    
+    .overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.4);
+      z-index: 2000;
+    }
+    
+    .overlay.show {
+      display: block;
+    }
+    
+    /* Empty state */
+    .empty-state {
+      padding: 30px;
+      text-align: center;
+      color: var(--gray);
+    }
+    
+    .empty-state i {
+      font-size: 48px;
+      margin-bottom: 15px;
+      color: #e0e0e0;
+    }
+    
+    .empty-state p {
+      font-size: 18px;
+    }
+    
+    .account-limit-info {
+      background-color: #f8f9fa;
+      border-radius: 8px;
+      padding: 15px;
+      margin: 15px 0;
+      border-left: 4px solid var(--secondary);
+    }
+    
+    .account-limit-info h4 {
+      margin-top: 0;
+      color: var(--primary);
+    }
+    
+    .account-limit-info p {
+      margin: 5px 0;
+    }
+    
+    .account-limit-info .limit-reached {
+      color: var(--accent);
+      font-weight: bold;
+    }
+    
+    /* Responsive */
+    @media (max-width: 992px) {
+      .sidebar {
+        width: var(--sidebar-collapsed);
+      }
+      
+      .sidebar:not(.closed) {
+        width: var(--sidebar-width);
+      }
+      
+      main {
+        margin-left: var(--sidebar-collapsed);
+      }
+      
+      .sidebar:not(.closed) + main {
+        margin-left: var(--sidebar-width);
+      }
+      
+      .branch-table {
+        display: block;
+        overflow-x: auto;
+      }
+      
+      .notification-panel {
+        width: 320px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .branch-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+      }
+      
+      .action-buttons {
+        flex-wrap: wrap;
+      }
+      
+      .modal-content {
+        width: 95%;
+      }
+      
+      .notification-panel {
+        width: 280px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .main-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+      }
+      
+      .header-right {
+        align-self: flex-end;
+      }
+      
+      .branch-controls {
+        flex-direction: column;
+      }
+      
+      .form-footer {
+        flex-direction: column;
+      }
+      
+      .btn {
+        width: 100%;
+        justify-content: center;
+      }
+      
+      .notification-panel {
+        width: 100%;
+        right: -100%;
+      }
+    }
+    
+    /* Hidden coordinates fields */
+    .coordinates-container {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar" id="sidebar">
+    <button class="toggle-btn" onclick="toggleSidebar()">
+      <i class="fas fa-bars"></i>
+    </button>
+    <nav class="nav-menu">
+      <ul>
+        <li><a href="tongquan.html"><i class="fas fa-chart-line"></i><span class="link-text">Tổng quan</span></a></li>
+        <li><a href="quanlychinhanh.html" class="active"><i class="fas fa-building"></i><span class="link-text">Quản lý chi nhánh</span></a></li>
+        <li>
+          <a href="#" onclick="toggleBranchSubmenu()">
+            <i class="fas fa-store-alt"></i>
+            <span class="link-text">Quản lý nhà hàng</span>
+            <i id="branch-arrow" class="fas fa-chevron-down" style="float: right;"></i>
+          </a>
+          <ul class="submenu" id="branch-submenu" style="display: none; padding-left: 20px;"></ul>
+        </li>
+        <li><a href="quanlynhanvien.html"><i class="fas fa-user-friends"></i><span class="link-text">Quản lý nhân viên</span></a></li>
+        <li><a href="quanlydanhmuc.html"><i class="fas fa-list-alt"></i><span class="link-text">Quản lý danh mục</span></a></li>
+        <li><a href="quanlymenu.html"><i class="fas fa-utensils"></i><span class="link-text">Quản lý menu</span></a></li>
+        <li><a href="quanlykhachhang.html"><i class="fas fa-user"></i><span class="link-text">Quản lý khách hàng</span></a></li>  
+        <li><a href="quanlyvoucher.html"><i class="fas fa-ticket-alt"></i><span class="link-text">Quản lý voucher</span></a></li>
+        <li><a href="setting.html"><i class="fas fa-cogs"></i><span class="link-text">Cài đặt</span></a></li>
+      </ul>
+    </nav>
+  </div>
+
+  <main>
+    <div class="main-header">
+      <h1>Quản lý Chi nhánh</h1>
+      <div class="header-right">
+        <div class="notification-icon" onclick="toggleNotifications()">
+          <i class="fas fa-bell"></i>
+          <span class="notification-badge" id="notification-badge">0</span>
+        </div>
+        <div class="user-profile">
+          <div class="avatar" id="header-avatar">A</div>
+          <span class="user-name" id="header-username">Admin</span>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Branch Management Content -->
+    <div class="branch-container">
+      <div class="branch-header">
+        <h2>Danh sách chi nhánh</h2>
+        <button class="btn btn-primary" id="add-branch-btn" onclick="openAddBranchModal()">
+          <i class="fas fa-plus"></i> Thêm chi nhánh
+        </button>
+      </div>
+      
+      <!-- Account Limit Info -->
+      <div class="account-limit-info" id="account-limit-info">
+        <p id="account-limit-text">Đang kiểm tra giới hạn tài khoản...</p>
+      </div>
+      
+      <div class="branch-controls">
+        <div class="search-box">
+          <i class="fas fa-search"></i>
+          <input type="text" id="branch-search" placeholder="Tìm kiếm theo mã, tên..." oninput="filterBranches()">
+        </div>
+      </div>
+      
+      <div class="table-responsive">
+        <table class="branch-table">
+          <thead>
+            <tr>
+              <th>Mã chi nhánh</th>
+              <th>Tên chi nhánh</th>
+              <th>Tỉnh/Thành phố</th>
+              <th>Trạng thái</th>
+              <th>Hình ảnh</th>
+              <th>Hành động</th>
+            </tr>
+          </thead>
+          <tbody id="branch-list">
+            <!-- Branch data will be loaded here -->
+          </tbody>
+        </table>
+      </div>
+      
+      <div id="empty-branch-state" class="empty-state" style="display: none;">
+        <i class="fas fa-store-slash"></i>
+        <p>Bạn chưa có chi nhánh nào</p>
+        <button class="btn btn-primary" id="add-first-branch-btn" onclick="openAddBranchModal()" style="margin-top: 20px;">
+          <i class="fas fa-plus"></i> Thêm chi nhánh đầu tiên
+        </button>
+      </div>
+    </div>
+  </main>
+  
+  <!-- Add Branch Modal -->
+  <div class="modal" id="add-branch-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Thêm chi nhánh mới</h3>
+        <button class="close-btn" onclick="closeAddBranchModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="branch-code">Mã chi nhánh *</label>
+          <input type="text" id="branch-code" placeholder="VD: CN001">
+        </div>
+        <div class="form-group">
+          <label for="branch-name">Tên chi nhánh *</label>
+          <input type="text" id="branch-name" placeholder="VD: Chi nhánh trung tâm">
+        </div>
+        
+        <div class="form-group">
+          <label for="branch-province">Tỉnh/Thành phố *</label>
+          <select id="branch-province" class="province-select">
+            <option value="">Đang tải tỉnh thành...</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="branch-address-detail">Địa chỉ chi tiết *</label>
+          <input type="text" id="branch-address-detail" placeholder="VD: Số 123, đường Nguyễn Huệ">
+        </div>
+        
+        <div class="form-group">
+          <label for="branch-map-url">Link Google Maps *</label>
+          <div class="extract-coordinates">
+            <input type="text" id="branch-map-url" placeholder="Dán link Google Maps tại đây">
+            <button class="btn" onclick="extractCoordinates()" type="button">Lấy thông tin</button>
+          </div>
+          <div id="coordinate-result" class="coordinates-result">
+            <p>Chưa có thông tin địa chỉ</p>
+          </div>
+        </div>
+        
+        <div class="coordinates-container">
+          <div class="form-group">
+            <label for="branch-latitude">Vĩ độ (Latitude)</label>
+            <input type="text" id="branch-latitude" readonly>
+          </div>
+          <div class="form-group">
+            <label for="branch-longitude">Kinh độ (Longitude)</label>
+            <input type="text" id="branch-longitude" readonly>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="branch-status">Trạng thái *</label>
+          <select id="branch-status">
+            <option value="active">Hoạt động</option>
+            <option value="inactive">Ngừng hoạt động</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="branch-image">Hình ảnh chi nhánh</label>
+          <input type="hidden" role="uploadcare-uploader" id="branch-image" data-public-key="238c599562905655c2c8" data-images-only="true" />
+          <div id="image-preview" class="image-preview">
+            <div class="image-placeholder">
+              <i class="fas fa-image"></i>
+              <div>Chưa có hình ảnh</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="form-footer">
+        <button class="btn" onclick="closeAddBranchModal()">Hủy</button>
+        <button class="btn btn-success" onclick="saveBranch()">Lưu</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification Panel -->
+  <div class="notification-panel" id="notification-panel">
+    <div class="notification-header">
+      <h3>Thông báo</h3>
+      <button class="close-notifications" onclick="toggleNotifications()">&times;</button>
+    </div>
+    <div class="notification-list" id="notification-list">
+      <!-- Notifications will be added here -->
+    </div>
+    <div class="notification-footer">
+      <button class="clear-notifications" onclick="clearNotifications()">
+        <i class="fas fa-trash-alt"></i> Xóa tất cả thông báo
+      </button>
+    </div>
+  </div>
+  
+  <!-- Overlay for notification panel -->
+  <div class="overlay" id="overlay" onclick="toggleNotifications()"></div>
+
+  <!-- Firebase Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  
+  <script>
+    // Initialize Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyBzAdWAVjD_NQP3uglLYOOFWUmDGsylsg0",
+      authDomain: "foodiee-fcdc1.firebaseapp.com",
+      databaseURL: "https://foodiee-fcdc1-default-rtdb.firebaseio.com",
+      projectId: "foodiee-fcdc1",
+      storageBucket: "foodiee-fcdc1.appspot.com",
+      messagingSenderId: "993331259398",
+      appId: "1:993331259398:web:2b922ef5e0519d5e237b87",
+      measurementId: "G-PDT1VE8JL5"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+    const auth = firebase.auth();
+    
+    // DOM elements
+    const branchList = document.getElementById('branch-list');
+    const branchSubmenu = document.getElementById('branch-submenu');
+    const notificationBadge = document.getElementById('notification-badge');
+    const notificationList = document.getElementById('notification-list');
+    const notificationPanel = document.getElementById('notification-panel');
+    const overlay = document.getElementById('overlay');
+    const emptyBranchState = document.getElementById('empty-branch-state');
+    const accountLimitInfo = document.getElementById('account-limit-info');
+    const accountLimitText = document.getElementById('account-limit-text');
+    const addBranchBtn = document.getElementById('add-branch-btn');
+    const addFirstBranchBtn = document.getElementById('add-first-branch-btn');
+    
+    // Sample branch data structure
+    let branches = {};
+    let currentUser = null;
+    let currentUserRole = '';
+    let currentBranchLimit = 0;
+    
+    // Current branch image URL
+    let currentImageUrl = '';
+    
+    // Uploadcare widget
+    let uploadcareWidget = null;
+    
+    // Toggle sidebar
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      sidebar.classList.toggle('closed');
+      localStorage.setItem('sidebarClosed', sidebar.classList.contains('closed'));
+    }
+    
+    // Toggle branch submenu
+    function toggleBranchSubmenu() {
+      const submenu = document.getElementById('branch-submenu');
+      const arrow = document.getElementById('branch-arrow');
+      
+      if (submenu.style.display === 'none' || submenu.style.display === '') {
+        submenu.style.display = 'block';
+        submenu.classList.add('show');
+        arrow.classList.remove('fa-chevron-down');
+        arrow.classList.add('fa-chevron-up');
+      } else {
+        submenu.style.display = 'none';
+        submenu.classList.remove('show');
+        arrow.classList.remove('fa-chevron-up');
+        arrow.classList.add('fa-chevron-down');
+      }
+    }
+    
+    // Toggle notifications panel
+    function toggleNotifications() {
+      notificationPanel.classList.toggle('open');
+      overlay.classList.toggle('show');
+      
+      // Mark all notifications as read when opening panel
+      if (notificationPanel.classList.contains('open')) {
+        markNotificationsAsRead();
+      }
+    }
+
+    // Format time
+    function formatTime(timestamp) {
+      const date = new Date(timestamp);
+      return date.toLocaleString('vi-VN', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+
+    firebase.auth().onAuthStateChanged((user) => {
+      if (user) {
+        currentUser = user;
+        const uid = user.uid;
+        const userRef = firebase.database().ref('users/' + uid);
+        userRef.once('value').then((snapshot) => {
+          const data = snapshot.val();
+          if (!data) return;
+
+          const avatarUrl = data.avatarUrl || '';
+          const displayName = data.displayName || user.displayName || user.email.split('@')[0];
+
+          // Gán tên
+          const nameEl = document.getElementById('header-username');
+          if (nameEl) nameEl.textContent = displayName;
+
+          // Gán avatar
+          const avatarEl = document.getElementById('header-avatar');
+          if (avatarEl) {
+            if (avatarUrl) {
+              avatarEl.style.backgroundImage = `url(${avatarUrl})`;
+              avatarEl.style.backgroundSize = 'cover';
+              avatarEl.style.backgroundPosition = 'center';
+              avatarEl.textContent = '';
+            } else {
+              avatarEl.style.backgroundImage = '';
+              avatarEl.textContent = displayName.charAt(0).toUpperCase();
+            }
+          }
+          
+          // Lấy thông tin role từ info_user
+          if (data.info_user && data.info_user.role) {
+            currentUserRole = data.info_user.role;
+            updateAccountLimitInfo();
+          }
+          
+          // Load branches and notifications
+          loadBranches();
+          loadNotifications();
+          
+          // Load provinces
+          loadProvinces();
+        });
+      } else {
+        // Nếu chưa đăng nhập thì chuyển về trang login
+        window.location.href = 'index.html';
+      }
+    });
+    
+    // Load provinces from API
+    function loadProvinces() {
+      fetch('https://provinces.open-api.vn/api/?depth=1')
+        .then(response => response.json())
+        .then(data => {
+          const provinceSelect = document.getElementById('branch-province');
+          provinceSelect.innerHTML = '<option value="">Chọn tỉnh/thành phố</option>';
+          
+          data.forEach(province => {
+            const option = document.createElement('option');
+            option.value = province.name;
+            option.textContent = province.name;
+            provinceSelect.appendChild(option);
+          });
+        })
+        .catch(error => {
+          console.error('Lỗi khi tải tỉnh thành:', error);
+          const provinceSelect = document.getElementById('branch-province');
+          provinceSelect.innerHTML = '<option value="">Không thể tải tỉnh thành</option>';
+        });
+    }
+    
+    // Extract coordinates from Google Maps URL
+    function extractCoordinates() {
+      const url = document.getElementById('branch-map-url').value;
+      const regex = /@(-?\d+\.\d+),(-?\d+\.\d+)/;
+      const match = url.match(regex);
+      const resultDiv = document.getElementById('coordinate-result');
+      
+      if (match) {
+        const latitude = match[1];
+        const longitude = match[2];
+        
+        document.getElementById('branch-latitude').value = latitude;
+        document.getElementById('branch-longitude').value = longitude;
+        
+        resultDiv.innerHTML = `
+          <p><strong>Đã lấy thông tin địa chỉ thành công!</strong></p>
+        `;
+        resultDiv.className = 'coordinates-result success';
+      } else {
+        resultDiv.innerHTML = `
+          <p><strong>Không tìm thấy thông tin địa chỉ trong URL</strong></p>
+          <p>Vui lòng kiểm tra lại URL Google Maps</p>
+        `;
+        resultDiv.className = 'coordinates-result error';
+      }
+    }
+    
+    // Update account limit info
+    function updateAccountLimitInfo() {
+      let maxBranches = 0;
+      let branchType = '';
+      
+      switch(currentUserRole) {
+        case 'admin base':
+          maxBranches = 1;
+          branchType = 'Admin Base';
+          break;
+        case 'admin pro':
+          maxBranches = 5;
+          branchType = 'Admin Pro';
+          break;
+        case 'admin limited':
+          maxBranches = Infinity;
+          branchType = 'Admin Limited';
+          break;
+        default:
+          maxBranches = 0;
+          branchType = 'Không xác định';
+      }
+      
+      currentBranchLimit = maxBranches;
+      
+      const currentBranchCount = Object.keys(branches).length;
+      let limitText = '';
+      
+      if (maxBranches === Infinity) {
+        limitText = `Tài khoản ${branchType}: Bạn có thể tạo không giới hạn chi nhánh`;
+      } else {
+        const remaining = maxBranches - currentBranchCount;
+        const reachedLimit = currentBranchCount >= maxBranches;
+        
+        limitText = `
+          Tài khoản ${branchType}: 
+          Bạn có thể tạo tối đa ${maxBranches} chi nhánh.
+          Hiện tại bạn đã tạo ${currentBranchCount} chi nhánh.
+        `;
+        
+        if (reachedLimit) {
+          limitText += `<p class="limit-reached">Bạn đã đạt giới hạn tối đa!</p>`;
+        } else {
+          limitText += `<p>Bạn còn có thể tạo ${remaining} chi nhánh.</p>`;
+        }
+      }
+      
+      accountLimitText.innerHTML = limitText;
+      
+      // Disable buttons if limit reached
+      const reachedLimit = currentBranchCount >= maxBranches && maxBranches !== Infinity;
+      addBranchBtn.disabled = reachedLimit;
+      addFirstBranchBtn.disabled = reachedLimit;
+      
+      if (reachedLimit) {
+        addBranchBtn.classList.add('disabled');
+        addFirstBranchBtn.classList.add('disabled');
+      } else {
+        addBranchBtn.classList.remove('disabled');
+        addFirstBranchBtn.classList.remove('disabled');
+      }
+    }
+    
+    // Modal functions
+    function openAddBranchModal() {
+      if (!currentUser) {
+        showToast('Bạn chưa đăng nhập!', 'error');
+        return;
+      }
+      
+      // Check branch limit
+      const currentBranchCount = Object.keys(branches).length;
+      const maxBranches = currentBranchLimit;
+      
+      if (maxBranches !== Infinity && currentBranchCount >= maxBranches) {
+        showToast(`Bạn đã đạt giới hạn tối đa ${maxBranches} chi nhánh!`, 'error');
+        return;
+      }
+      
+      document.getElementById('add-branch-modal').style.display = 'flex';
+      document.getElementById('branch-code').focus();
+      
+      // Reset fields
+      document.getElementById('branch-code').value = '';
+      document.getElementById('branch-name').value = '';
+      document.getElementById('branch-province').selectedIndex = 0;
+      document.getElementById('branch-address-detail').value = '';
+      document.getElementById('branch-map-url').value = '';
+      document.getElementById('branch-latitude').value = '';
+      document.getElementById('branch-longitude').value = '';
+      document.getElementById('coordinate-result').innerHTML = '<p>Chưa có thông tin địa chỉ</p>';
+      document.getElementById('coordinate-result').className = 'coordinates-result';
+      document.getElementById('branch-status').value = 'active';
+
+      document.getElementById('branch-code').disabled = false;
+      document.querySelector('.btn-success').textContent = 'Lưu';
+      document.querySelector('.btn-success').onclick = saveBranch;
+      
+      // Reset image
+      currentImageUrl = '';
+      updateImagePreview();
+      
+      // Initialize Uploadcare widget
+      if (!uploadcareWidget) {
+        uploadcareWidget = uploadcare.Widget('#branch-image');
+        
+        uploadcareWidget.onChange(function(file) {
+          if (file) {
+            file.done(function(info) {
+              currentImageUrl = info.cdnUrl;
+              updateImagePreview();
+            });
+          } else {
+            currentImageUrl = '';
+            updateImagePreview();
+          }
+        });
+      } else {
+        uploadcareWidget.value(null);
+      }
+    }
+    
+    function closeAddBranchModal() {
+      document.getElementById('add-branch-modal').style.display = 'none';
+
+      document.getElementById('branch-code').value = '';
+      document.getElementById('branch-name').value = '';
+      document.getElementById('branch-province').selectedIndex = 0;
+      document.getElementById('branch-address-detail').value = '';
+      document.getElementById('branch-map-url').value = '';
+      document.getElementById('branch-latitude').value = '';
+      document.getElementById('branch-longitude').value = '';
+      document.getElementById('coordinate-result').innerHTML = '<p>Chưa có thông tin địa chỉ</p>';
+      document.getElementById('coordinate-result').className = 'coordinates-result';
+      document.getElementById('branch-status').value = 'active';
+
+      document.getElementById('branch-code').disabled = false;
+      document.querySelector('.btn-success').textContent = 'Lưu';
+      document.querySelector('.btn-success').onclick = saveBranch;
+      
+      // Reset image
+      currentImageUrl = '';
+      updateImagePreview();
+      
+      // Reset widget
+      if (uploadcareWidget) {
+        uploadcareWidget.value(null);
+      }
+    }
+    
+    // Update image preview
+    function updateImagePreview() {
+      const preview = document.getElementById('image-preview');
+      
+      if (currentImageUrl) {
+        preview.innerHTML = `<img src="${currentImageUrl}" alt="Preview" />`;
+      } else {
+        preview.innerHTML = `
+          <div class="image-placeholder">
+            <i class="fas fa-image"></i>
+            <div>Chưa có hình ảnh</div>
+          </div>
+        `;
+      }
+    }
+    
+    // Hàm kiểm tra xem chi nhánh có bàn đang hoạt động hoặc đã đặt không
+function checkBranchHasActiveTables(branchCode) {
+  return new Promise((resolve, reject) => {
+    if (!currentUser) {
+      resolve({
+        hasActiveTables: false,
+        activeTables: []
+      });
+      return;
+    }
+
+    // Truy vấn trực tiếp từ Firebase để lấy dữ liệu mới nhất
+    const tablesRef = database.ref(`users/${currentUser.uid}/branches/${branchCode}/local/tables`);
+    
+    tablesRef.once('value')
+      .then(snapshot => {
+        const tables = snapshot.val() || {};
+        let hasActiveTables = false;
+        let activeTables = [];
+        
+        Object.values(tables).forEach(table => {
+          // Kiểm tra bàn đang sử dụng (in-use) hoặc đã đặt trước (reserved)
+          if (table.status === 'in-use' || table.status === 'reserved') {
+            hasActiveTables = true;
+            activeTables.push(table.name || `Bàn ${table.code}`);
+          }
+        });
+
+        resolve({
+          hasActiveTables: hasActiveTables,
+          activeTables: activeTables
+        });
+      })
+      .catch(error => {
+        console.error('Lỗi khi kiểm tra bàn:', error);
+        // Nếu có lỗi, giả định là không có bàn hoạt động để không chặn người dùng
+        resolve({
+          hasActiveTables: false,
+          activeTables: []
+        });
+      });
+  });
+}
+
+    // Save branch to Firebase under user's node
+    function saveBranch() {
+      if (!currentUser) {
+        showToast('Bạn chưa đăng nhập!', 'error');
+        return;
+      }
+      
+      // Check branch limit
+      const currentBranchCount = Object.keys(branches).length;
+      const maxBranches = currentBranchLimit;
+      
+      if (maxBranches !== Infinity && currentBranchCount >= maxBranches) {
+        showToast(`Bạn đã đạt giới hạn tối đa ${maxBranches} chi nhánh!`, 'error');
+        return;
+      }
+      
+      const code = document.getElementById('branch-code').value.trim();
+      const name = document.getElementById('branch-name').value.trim();
+      const province = document.getElementById('branch-province').value.trim();
+      const addressDetail = document.getElementById('branch-address-detail').value.trim();
+      const mapUrl = document.getElementById('branch-map-url').value.trim();
+      const latitude = document.getElementById('branch-latitude').value.trim();
+      const longitude = document.getElementById('branch-longitude').value.trim();
+      const status = document.getElementById('branch-status').value;
+      
+      if (!code || !name || !province || !addressDetail || !mapUrl || !latitude || !longitude) {
+        showToast('Vui lòng điền đầy đủ thông tin và lấy thông tin địa chỉ', 'error');
+        return;
+      }
+      
+      const branchData = {
+        code: code,
+        name: name,
+        province: province,
+        address_detail: addressDetail,
+        map_url: mapUrl,
+        latitude: latitude,
+        longitude: longitude,
+        status: status,
+        imageUrl: currentImageUrl || '',
+        createdAt: new Date().toISOString()
+      };
+      
+      // Save to Firebase under the user's node
+      const branchRef = database.ref(`users/${currentUser.uid}/branches/${code}`);
+      branchRef.set(branchData)
+        .then(() => {
+          closeAddBranchModal();
+          loadBranches();
+          showToast('Thêm chi nhánh thành công!', 'success');
+          
+          // Add notification
+          addNotification(
+            "Thêm chi nhánh mới",
+            `Chi nhánh ${name} (${code}) đã được thêm vào hệ thống`,
+            "branch_add",
+            "success"
+          );
+        })
+        .catch(error => {
+          console.error('Error saving branch:', error);
+          showToast('Có lỗi xảy ra: ' + error.message, 'error');
+        });
+    }
+    
+    // Load branches from Firebase for current user
+    function loadBranches() {
+      if (!currentUser) return;
+      
+      const branchesRef = database.ref(`users/${currentUser.uid}/branches`);
+      
+      branchesRef.once('value')
+        .then(snapshot => {
+          branches = snapshot.val() || {};
+          renderBranchList();
+          updateBranchSubmenu();
+          updateAccountLimitInfo();
+          
+          // Hiển thị trạng thái trống nếu cần
+          if (Object.keys(branches).length === 0) {
+            emptyBranchState.style.display = 'block';
+            branchList.style.display = 'none';
+          } else {
+            emptyBranchState.style.display = 'none';
+            branchList.style.display = 'table-row-group';
+          }
+        })
+        .catch(error => {
+          console.error('Lỗi load chi nhánh:', error);
+          showToast('Lỗi khi tải dữ liệu chi nhánh', 'error');
+        });
+    }
+    
+    // Render branch list
+    function renderBranchList() {
+      branchList.innerHTML = '';
+
+      Object.keys(branches).forEach(key => {
+        const branch = branches[key];
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${branch.code}</td>
+          <td>${branch.name}</td>
+          <td>${branch.province}</td>
+          <td>
+            <span class="status-badge ${branch.status === 'active' ? 'status-active' : 'status-inactive'}">
+              ${branch.status === 'active' ? 'Hoạt động' : 'Ngừng hoạt động'}
+            </span>
+          </td>
+          <td>
+            ${branch.imageUrl ? 
+              `<img src="${branch.imageUrl}" alt="${branch.name}" style="max-width: 60px; max-height: 40px; border-radius: 4px;">` : 
+              '<span>Chưa có ảnh</span>'}
+          </td>
+          <td class="action-buttons">
+            <button class="action-btn edit" title="Chỉnh sửa" onclick="editBranch('${branch.code}')">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button class="action-btn ${branch.status === 'active' ? 'disabled' : 'delete'}" 
+                     title="${branch.status === 'active' ? 'Không thể xóa chi nhánh đang hoạt động' : 'Xóa'}" 
+                     onclick="${branch.status === 'inactive' ? `deleteBranch('${branch.code}')` : 'showToast("Không thể xóa chi nhánh đang hoạt động", "warning")'}">
+              <i class="fas fa-trash"></i>
+            </button>
+          </td>
+        `;
+
+        branchList.appendChild(row);
+      });
+    }
+    
+    // Edit branch function
+    function editBranch(code) {
+      const branch = branches[code];
+      if (!branch) return;
+
+      // Mở modal
+      openAddBranchModal();
+
+      // Điền dữ liệu vào form
+      document.getElementById('branch-code').value = branch.code;
+      document.getElementById('branch-name').value = branch.name;
+      
+      // Điền dữ liệu tỉnh/thành phố
+      const provinceSelect = document.getElementById('branch-province');
+      for (let i = 0; i < provinceSelect.options.length; i++) {
+        if (provinceSelect.options[i].value === branch.province) {
+          provinceSelect.selectedIndex = i;
+          break;
+        }
+      }
+      
+      document.getElementById('branch-address-detail').value = branch.address_detail || '';
+      document.getElementById('branch-map-url').value = branch.map_url || '';
+      document.getElementById('branch-latitude').value = branch.latitude || '';
+      document.getElementById('branch-longitude').value = branch.longitude || '';
+      document.getElementById('coordinate-result').innerHTML = '<p>Chưa có thông tin địa chỉ</p>';
+      document.getElementById('coordinate-result').className = 'coordinates-result';
+      document.getElementById('branch-status').value = branch.status || 'active';
+
+      // Set current image
+      currentImageUrl = branch.imageUrl || '';
+      updateImagePreview();
+
+      // Disable chỉnh mã
+      document.getElementById('branch-code').disabled = true;
+
+      // Đổi nút lưu
+      const saveBtn = document.querySelector('.btn-success');
+      saveBtn.textContent = 'Cập nhật';
+      saveBtn.onclick = () => {
+        const updatedData = {
+          name: document.getElementById('branch-name').value.trim(),
+          province: document.getElementById('branch-province').value.trim(),
+          address_detail: document.getElementById('branch-address-detail').value.trim(),
+          map_url: document.getElementById('branch-map-url').value.trim(),
+          latitude: document.getElementById('branch-latitude').value.trim(),
+          longitude: document.getElementById('branch-longitude').value.trim(),
+          status: document.getElementById('branch-status').value,
+          imageUrl: currentImageUrl || '',
+          updatedAt: new Date().toISOString()
+        };
+
+        if (!currentUser) {
+          showToast('Bạn chưa đăng nhập!', 'error');
+          return;
+        }
+
+        // Nếu đang cập nhật trạng thái thành inactive
+        if (updatedData.status === 'inactive') {
+          // Kiểm tra xem chi nhánh có bàn đang hoạt động không
+          checkBranchHasActiveTables(code)
+            .then(result => {
+              if (result.hasActiveTables) {
+                showToast(`Không thể ngừng hoạt động vì có ${result.activeTables.length} bàn đang hoạt động hoặc đặt trước: ${result.activeTables.join(', ')}`, 'error');
+                return;
+              }
+              
+              // Tiếp tục cập nhật nếu không có bàn hoạt động
+              updateBranchData(code, updatedData);
+            });
+        } else {
+          // Tiếp tục cập nhật nếu không phải inactive
+          updateBranchData(code, updatedData);
+        }
+      };
+    }
+    
+    // Hàm thực hiện cập nhật dữ liệu chi nhánh
+    function updateBranchData(code, updatedData) {
+      database.ref(`users/${currentUser.uid}/branches/${code}`).update(updatedData)
+        .then(() => {
+          closeAddBranchModal();
+          loadBranches();
+          showToast('Cập nhật chi nhánh thành công!', 'success');
+          
+          // Add notification
+          addNotification(
+            "Cập nhật chi nhánh",
+            `Thông tin chi nhánh ${updatedData.name} (${code}) đã được cập nhật`,
+            "branch_edit",
+            "info"
+          );
+        })
+        .catch(error => {
+          console.error('Update error:', error);
+          showToast('Lỗi khi cập nhật: ' + error.message, 'error');
+        });
+    }
+    
+    // Update branch submenu
+    function updateBranchSubmenu() {
+      branchSubmenu.innerHTML = '';
+      
+      Object.keys(branches).forEach(key => {
+        const branch = branches[key];
+        
+        const li = document.createElement('li');
+        li.innerHTML = `
+          <a href="branch-detail.html?code=${branch.code}">
+            <i class="fas fa-store"></i>
+            <span class="link-text">${branch.name}</span>
+          </a>
+        `;
+        
+        branchSubmenu.appendChild(li);
+      });
+      
+      // Show submenu if it has items
+      if (Object.keys(branches).length > 0) {
+        branchSubmenu.style.display = 'block';
+        branchSubmenu.classList.add('show');
+      }
+    }
+    
+    // Filter branches
+    function filterBranches() {
+      const searchTerm = document.getElementById('branch-search').value.toLowerCase();
+      const rows = branchList.getElementsByTagName('tr');
+      
+      for (let i = 0; i < rows.length; i++) {
+        const code = rows[i].cells[0].textContent.toLowerCase();
+        const name = rows[i].cells[1].textContent.toLowerCase();
+        const province = rows[i].cells[2].textContent.toLowerCase();
+        
+        if (code.includes(searchTerm) || name.includes(searchTerm) || province.includes(searchTerm)) {
+          rows[i].style.display = '';
+        } else {
+          rows[i].style.display = 'none';
+        }
+      }
+    }
+    
+    // Delete branch (only inactive branches)
+    function deleteBranch(code) {
+      if (!currentUser) {
+        showToast('Bạn chưa đăng nhập!', 'error');
+        return;
+      }
+      
+      const branch = branches[code];
+      
+      // Kiểm tra trạng thái chi nhánh
+      if (branch.status === 'active') {
+        showToast('Không thể xóa chi nhánh đang hoạt động!', 'warning');
+        return;
+      }
+      
+      if (confirm(`Bạn có chắc chắn muốn xóa chi nhánh ${branch.name} (${code})?`)) {
+        database.ref(`users/${currentUser.uid}/branches/${code}`).remove()
+          .then(() => {
+            loadBranches();
+            showToast('Đã xóa chi nhánh thành công!', 'success');
+            
+            // Add notification
+            addNotification(
+              "Xóa chi nhánh",
+              `Chi nhánh ${branch.name} (${code}) đã bị xóa khỏi hệ thống`,
+              "branch_delete",
+              "warning"
+            );
+          })
+          .catch(error => {
+            console.error('Error deleting branch:', error);
+            showToast('Có lỗi xảy ra: ' + error.message, 'error');
+          });
+      }
+    }
+    
+    // Show toast notification
+    function showToast(message, type) {
+      // Remove existing toasts
+      const existingToasts = document.querySelectorAll('.toast');
+      existingToasts.forEach(toast => toast.remove());
+      
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.innerHTML = `
+        <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-exclamation-triangle'}"></i>
+        <span>${message}</span>
+      `;
+      
+      document.body.appendChild(toast);
+      
+      // Auto remove after 3 seconds
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+    
+    // Add notification to the list
+    function addNotification(title, content, type, iconType) {
+      if (!currentUser) return;
+      
+      const notificationRef = database.ref(`users/${currentUser.uid}/notifications`).push();
+      const timestamp = new Date().getTime();
+      
+      const notificationData = {
+        title: title,
+        content: content,
+        type: type,
+        iconType: iconType,
+        timestamp: timestamp,
+        read: false
+      };
+      
+      notificationRef.set(notificationData)
+        .then(() => {
+          loadNotifications();
+        })
+        .catch(error => {
+          console.error('Error adding notification:', error);
+        });
+    }
+    
+    // Load notifications for current user
+    function loadNotifications() {
+      if (!currentUser) return;
+      
+      const notificationsRef = database.ref(`users/${currentUser.uid}/notifications`).orderByChild('timestamp').limitToLast(20);
+      
+      notificationsRef.on('value', snapshot => {
+        const notifications = snapshot.val() || {};
+        let unreadCount = 0;
+        
+        // Clear existing notifications
+        notificationList.innerHTML = '';
+        
+        // Convert to array and sort by timestamp
+        const notificationArray = Object.entries(notifications).map(([key, value]) => {
+          return { id: key, ...value };
+        });
+        
+        // Sort by timestamp (newest first)
+        notificationArray.sort((a, b) => b.timestamp - a.timestamp);
+        
+        // Render each notification
+        notificationArray.forEach(notification => {
+          if (!notification.read) unreadCount++;
+          
+          const notificationItem = document.createElement('div');
+          notificationItem.className = 'notification-item';
+          notificationItem.dataset.id = notification.id;
+          
+          let iconClass = '';
+          let iconColor = '';
+          
+          switch (notification.iconType) {
+            case 'success':
+              iconClass = 'fa-check-circle';
+              iconColor = 'var(--success)';
+              break;
+            case 'error':
+              iconClass = 'fa-exclamation-circle';
+              iconColor = 'var(--accent)';
+              break;
+            case 'warning':
+              iconClass = 'fa-exclamation-triangle';
+              iconColor = 'var(--warning)';
+              break;
+            default:
+              iconClass = 'fa-info-circle';
+              iconColor = 'var(--secondary)';
+          }
+          
+          notificationItem.innerHTML = `
+            <div class="notification-title">
+              <i class="fas ${iconClass}" style="color: ${iconColor}"></i>
+              ${notification.title}
+            </div>
+            <div class="notification-content">${notification.content}</div>
+            <div class="notification-time">${formatTime(notification.timestamp)}</div>
+          `;
+          
+          notificationList.appendChild(notificationItem);
+        });
+        
+        // Update badge
+        notificationBadge.textContent = unreadCount;
+      });
+    }
+    
+    // Mark all notifications as read
+    function markNotificationsAsRead() {
+      if (!currentUser) return;
+      
+      const notificationsRef = database.ref(`users/${currentUser.uid}/notifications`);
+      
+      notificationsRef.once('value')
+        .then(snapshot => {
+          const notifications = snapshot.val() || {};
+          const updates = {};
+          
+          Object.keys(notifications).forEach(key => {
+            if (!notifications[key].read) {
+              updates[`${key}/read`] = true;
+            }
+          });
+          
+          if (Object.keys(updates).length > 0) {
+            notificationsRef.update(updates)
+              .then(() => {
+                // Update badge to 0
+                notificationBadge.textContent = '0';
+              })
+              .catch(error => {
+                console.error('Error marking notifications as read:', error);
+              });
+          }
+        });
+    }
+    
+    // Clear all notifications for current user
+    function clearNotifications() {
+      if (!currentUser) return;
+      
+      if (confirm('Bạn có chắc chắn muốn xóa tất cả thông báo?')) {
+        database.ref(`users/${currentUser.uid}/notifications`).remove()
+          .then(() => {
+            showToast('Đã xóa tất cả thông báo', 'success');
+          })
+          .catch(error => {
+            console.error('Error clearing notifications:', error);
+            showToast('Lỗi khi xóa thông báo: ' + error.message, 'error');
+          });
+      }
+    }
+    
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      if (localStorage.getItem('sidebarClosed') === 'true') {
+        document.getElementById('sidebar').classList.add('closed');
+      }
+    });
+  </script>
+</body>
+</html>
