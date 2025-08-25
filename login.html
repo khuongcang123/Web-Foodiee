@@ -503,6 +503,15 @@
         .container, .form-container, .overlay-container, .overlay, .overlay-panel {
             transition-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
         }
+        
+        /* Validation styles */
+        .input-error {
+            border-color: #e74c3c !important;
+        }
+        
+        .input-success {
+            border-color: #2ecc71 !important;
+        }
     </style>
 </head>
 <body>
@@ -524,6 +533,7 @@
                     <span class="input-focus-line"></span>
                     <span class="input-label">Họ và tên</span>
                 </div>
+                <div class="error-message" id="nameError"></div>
                 
                 <div class="input-group">
                     <i class="fas fa-envelope"></i>
@@ -538,6 +548,7 @@
                     <span class="input-focus-line"></span>
                     <span class="input-label">Số điện thoại</span>
                 </div>
+                <div class="error-message" id="phoneError"></div>
                 
                 <div class="password-container">
                     <div class="input-group">
@@ -635,6 +646,68 @@
         const loginError = document.getElementById('loginError');
         const loginSuccess = document.getElementById('loginSuccess');
         const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+        const nameError = document.getElementById('nameError');
+        const phoneError = document.getElementById('phoneError');
+        const registerName = document.getElementById('registerName');
+        const registerPhone = document.getElementById('registerPhone');
+
+        // Validation functions
+        function validateName(name) {
+            const nameRegex = /^[a-zA-ZÀ-ỹ\s]+$/;
+            return nameRegex.test(name);
+        }
+
+        function validatePhone(phone) {
+            const phoneRegex = /^0\d{9}$/;
+            return phoneRegex.test(phone);
+        }
+
+        // Real-time validation for name
+        registerName.addEventListener('input', function() {
+            const name = this.value.trim();
+            
+            if (name === '') {
+                nameError.textContent = '';
+                this.classList.remove('input-error');
+                this.classList.remove('input-success');
+                return;
+            }
+            
+            if (!validateName(name)) {
+                nameError.textContent = 'Họ và tên chỉ được chứa chữ cái và khoảng trắng';
+                this.classList.add('input-error');
+                this.classList.remove('input-success');
+            } else {
+                nameError.textContent = '';
+                this.classList.remove('input-error');
+                this.classList.add('input-success');
+            }
+        });
+
+        // Real-time validation for phone
+        registerPhone.addEventListener('input', function() {
+            const phone = this.value.trim();
+            
+            // Chỉ cho phép nhập số
+            this.value = phone.replace(/\D/g, '');
+            
+            if (this.value === '') {
+                phoneError.textContent = '';
+                this.classList.remove('input-error');
+                this.classList.remove('input-success');
+                return;
+            }
+            
+            if (!validatePhone(this.value)) {
+                phoneError.textContent = 'Số điện thoại phải bắt đầu bằng 0 và có đúng 10 chữ số';
+                this.classList.add('input-error');
+                this.classList.remove('input-success');
+            } else {
+                phoneError.textContent = '';
+                this.classList.remove('input-error');
+                this.classList.add('input-success');
+            }
+        });
 
         // Toggle password visibility
         document.getElementById('toggleRegisterPassword').addEventListener('click', function () {
@@ -675,10 +748,28 @@
             registerError.textContent = '';
             registerSuccess.textContent = '';
 
-            const name = document.getElementById('registerName').value;
-            const email = document.getElementById('registerEmail').value;
-            const phone = document.getElementById('registerPhone').value;
+            const name = document.getElementById('registerName').value.trim();
+            const email = document.getElementById('registerEmail').value.trim();
+            const phone = document.getElementById('registerPhone').value.trim();
             const password = document.getElementById('registerPassword').value;
+
+            // Validate name
+            if (!validateName(name)) {
+                registerError.textContent = 'Họ và tên chỉ được chứa chữ cái và khoảng trắng';
+                registerName.classList.add('input-error');
+                return;
+            } else {
+                registerName.classList.remove('input-error');
+            }
+
+            // Validate phone
+            if (!validatePhone(phone)) {
+                registerError.textContent = 'Số điện thoại phải bắt đầu bằng 0 và có đúng 10 chữ số';
+                registerPhone.classList.add('input-error');
+                return;
+            } else {
+                registerPhone.classList.remove('input-error');
+            }
 
             if (password.length < 6) {
                 registerError.textContent = 'Mật khẩu phải có ít nhất 6 ký tự';
@@ -704,6 +795,8 @@
                 .then(() => {
                     registerError.textContent = '';
                     registerForm.reset();
+                    registerName.classList.remove('input-success');
+                    registerPhone.classList.remove('input-success');
                     registerSuccess.textContent = 'Đăng ký thành công! Tài khoản admin đã được tạo.';
                     setTimeout(() => {
                         container.classList.remove("right-panel-active");
@@ -819,6 +912,12 @@
             registerSuccess.textContent = '';
             loginError.textContent = '';
             loginSuccess.textContent = '';
+            nameError.textContent = '';
+            phoneError.textContent = '';
+            registerName.classList.remove('input-error');
+            registerName.classList.remove('input-success');
+            registerPhone.classList.remove('input-error');
+            registerPhone.classList.remove('input-success');
         }
     </script>
 </body>
