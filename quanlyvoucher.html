@@ -926,14 +926,14 @@
             <div class="form-col">
               <div class="form-group">
                 <label for="voucherCode"><i class="fas fa-barcode"></i> Mã Voucher *</label>
-                <input type="text" id="voucherCode" class="form-control" placeholder="Nhập mã voucher" maxlength="20">
+                <input type="text" id="voucherCode" class="form-control" placeholder="Nhập mã voucher" maxlength="20" oninput="checkVoucherCode()">
                 <div class="error-message" id="codeError">Mã voucher không hợp lệ</div>
               </div>
             </div>
             <div class="form-col">
               <div class="form-group">
                 <label for="voucherName"><i class="fas fa-ticket-alt"></i> Tên Voucher *</label>
-                <input type="text" id="voucherName" class="form-control" placeholder="Nhập tên voucher">
+                <input type="text" id="voucherName" class="form-control" placeholder="Nhập tên voucher" oninput="checkVoucherName()">
                 <div class="error-message" id="nameError">Vui lòng nhập tên voucher</div>
               </div>
             </div>
@@ -942,24 +942,20 @@
           <div class="form-row">
             <div class="form-col">
               <div class="form-group">
-                <label><i class="fas fa-percent"></i> Loại giảm giá *</label>
+                <label><i class="fas fa-percent"></i> Loại giảm giá</label>
                 <div class="radio-group">
                   <div class="radio-item">
-                    <input type="radio" id="discountPercent" name="discountType" value="percent" checked>
+                    <input type="radio" id="discountPercent" name="discountType" value="percent" checked disabled>
                     <label for="discountPercent">Giảm theo phần trăm</label>
-                  </div>
-                  <div class="radio-item">
-                    <input type="radio" id="discountAmount" name="discountType" value="amount">
-                    <label for="discountAmount">Giảm theo số tiền</label>
                   </div>
                 </div>
               </div>
             </div>
             <div class="form-col">
               <div class="form-group">
-                <label for="discountValue"><i class="fas fa-tag"></i> Giá trị giảm *</label>
-                <input type="number" id="discountValue" class="form-control" placeholder="Nhập giá trị" min="1">
-                <div class="error-message" id="valueError">Giá trị không hợp lệ</div>
+                <label for="discountValue"><i class="fas fa-tag"></i> Giá trị giảm (%) *</label>
+                <input type="number" id="discountValue" class="form-control" placeholder="Nhập giá trị" min="1" max="100" oninput="validateDiscountValue()">
+                <div class="error-message" id="valueError">Giá trị không hợp lệ (1-100%)</div>
               </div>
             </div>
           </div>
@@ -968,13 +964,15 @@
             <div class="form-col">
               <div class="form-group">
                 <label for="minOrder"><i class="fas fa-money-bill-wave"></i> Đơn tối thiểu (VND)</label>
-                <input type="number" id="minOrder" class="form-control" placeholder="Nhập đơn tối thiểu" min="0">
+                <input type="number" id="minOrder" class="form-control" placeholder="Nhập đơn tối thiểu" min="0" oninput="validateMinOrder()">
+                <div class="error-message" id="minOrderError">Giá trị không được âm</div>
               </div>
             </div>
             <div class="form-col">
               <div class="form-group">
                 <label for="maxDiscount"><i class="fas fa-wallet"></i> Giá trị giảm tối đa (VND)</label>
-                <input type="number" id="maxDiscount" class="form-control" placeholder="Nhập giá trị tối đa" min="0">
+                <input type="number" id="maxDiscount" class="form-control" placeholder="Nhập giá trị tối đa" min="0" oninput="validateMaxDiscount()">
+                <div class="error-message" id="maxDiscountError">Giá trị không được âm</div>
               </div>
             </div>
           </div>
@@ -983,15 +981,15 @@
             <div class="form-col">
               <div class="form-group">
                 <label for="startDate"><i class="fas fa-calendar-alt"></i> Ngày bắt đầu *</label>
-                <input type="date" id="startDate" class="form-control">
+                <input type="date" id="startDate" class="form-control" onchange="validateEndDate()">
                 <div class="error-message" id="startDateError">Vui lòng chọn ngày bắt đầu</div>
               </div>
             </div>
             <div class="form-col">
               <div class="form-group">
                 <label for="endDate"><i class="fas fa-calendar-times"></i> Ngày kết thúc *</label>
-                <input type="date" id="endDate" class="form-control">
-                <div class="error-message" id="endDateError">Vui lòng chọn ngày kết thúc</div>
+                <input type="date" id="endDate" class="form-control" onchange="validateEndDate()">
+                <div class="error-message" id="endDateError">Ngày kết thúc phải sau ngày bắt đầu</div>
               </div>
             </div>
           </div>
@@ -1083,6 +1081,7 @@
     let currentUser = null;
     let editingVoucherId = null;
     let products = [];
+    let existingVouchers = [];
     
     // DOM Elements
     const addVoucherBtn = document.getElementById('addVoucherBtn');
@@ -1157,6 +1156,125 @@
         });
     }
     
+    // Kiểm tra mã voucher đã tồn tại
+    function checkVoucherCode() {
+      const voucherCode = document.getElementById('voucherCode').value.trim();
+      const codeError = document.getElementById('codeError');
+      
+      if (!voucherCode) {
+        codeError.textContent = 'Vui lòng nhập mã voucher';
+        codeError.style.display = 'block';
+        return false;
+      }
+      
+      const codeRegex = /^[a-zA-Z0-9_-]+$/;
+      if (!codeRegex.test(voucherCode)) {
+        codeError.textContent = 'Mã voucher chỉ được chứa chữ cái, số, dấu gạch ngang và gạch dưới';
+        codeError.style.display = 'block';
+        return false;
+      }
+      
+      // Kiểm tra trùng lặp (trừ voucher đang chỉnh sửa)
+      const isDuplicate = existingVouchers.some(voucher => 
+        voucher.code.toLowerCase() === voucherCode.toLowerCase() && 
+        (!editingVoucherId || voucher.id !== editingVoucherId)
+      );
+      
+      if (isDuplicate) {
+        codeError.textContent = 'Mã voucher đã tồn tại';
+        codeError.style.display = 'block';
+        return false;
+      }
+      
+      codeError.style.display = 'none';
+      return true;
+    }
+    
+    // Kiểm tra tên voucher đã tồn tại
+    function checkVoucherName() {
+      const voucherName = document.getElementById('voucherName').value.trim();
+      const nameError = document.getElementById('nameError');
+      
+      if (!voucherName) {
+        nameError.textContent = 'Vui lòng nhập tên voucher';
+        nameError.style.display = 'block';
+        return false;
+      }
+      
+      // Kiểm tra trùng lặp (trừ voucher đang chỉnh sửa)
+      const isDuplicate = existingVouchers.some(voucher => 
+        voucher.name.toLowerCase() === voucherName.toLowerCase() && 
+        (!editingVoucherId || voucher.id !== editingVoucherId)
+      );
+      
+      if (isDuplicate) {
+        nameError.textContent = 'Tên voucher đã tồn tại';
+        nameError.style.display = 'block';
+        return false;
+      }
+      
+      nameError.style.display = 'none';
+      return true;
+    }
+    
+    // Kiểm tra giá trị giảm
+    function validateDiscountValue() {
+      const discountValue = document.getElementById('discountValue').value;
+      const valueError = document.getElementById('valueError');
+      
+      if (!discountValue || discountValue <= 0 || discountValue > 100) {
+        valueError.textContent = 'Giá trị giảm phải từ 1 đến 100%';
+        valueError.style.display = 'block';
+        return false;
+      }
+      
+      valueError.style.display = 'none';
+      return true;
+    }
+    
+    // Kiểm tra đơn tối thiểu
+    function validateMinOrder() {
+      const minOrder = document.getElementById('minOrder').value;
+      const minOrderError = document.getElementById('minOrderError');
+      
+      if (minOrder && minOrder < 0) {
+        minOrderError.style.display = 'block';
+        return false;
+      }
+      
+      minOrderError.style.display = 'none';
+      return true;
+    }
+    
+    // Kiểm tra giá trị giảm tối đa
+    function validateMaxDiscount() {
+      const maxDiscount = document.getElementById('maxDiscount').value;
+      const maxDiscountError = document.getElementById('maxDiscountError');
+      
+      if (maxDiscount && maxDiscount < 0) {
+        maxDiscountError.style.display = 'block';
+        return false;
+      }
+      
+      maxDiscountError.style.display = 'none';
+      return true;
+    }
+    
+    // Kiểm tra ngày kết thúc
+    function validateEndDate() {
+      const startDate = new Date(document.getElementById('startDate').value);
+      const endDate = new Date(document.getElementById('endDate').value);
+      const endDateError = document.getElementById('endDateError');
+      
+      if (endDate && startDate && endDate < startDate) {
+        endDateError.style.display = 'block';
+        return false;
+      }
+      
+      endDateError.style.display = 'none';
+      return true;
+    }
+    
     // Mở modal thêm voucher
     function openVoucherModal(mode, voucherId = null) {
       const modal = document.getElementById('voucherModal');
@@ -1206,12 +1324,6 @@
           document.getElementById('voucherCode').value = voucher.code;
           document.getElementById('voucherName').value = voucher.name;
           
-          if (voucher.discountType === 'percent') {
-            document.getElementById('discountPercent').checked = true;
-          } else {
-            document.getElementById('discountAmount').checked = true;
-          }
-          
           document.getElementById('discountValue').value = voucher.discountValue;
           document.getElementById('minOrder').value = voucher.minOrder || '';
           document.getElementById('maxDiscount').value = voucher.maxDiscount || '';
@@ -1242,13 +1354,62 @@
         });
     }
     
+    // Validate form
+    function validateForm() {
+      let isValid = true;
+      
+      // Reset errors
+      document.querySelectorAll('.error-message').forEach(el => {
+        el.style.display = 'none';
+      });
+      
+      // Validate các trường
+      if (!checkVoucherCode()) isValid = false;
+      if (!checkVoucherName()) isValid = false;
+      if (!validateDiscountValue()) isValid = false;
+      if (!validateMinOrder()) isValid = false;
+      if (!validateMaxDiscount()) isValid = false;
+      
+      // Validate start date
+      const startDate = document.getElementById('startDate').value;
+      if (!startDate) {
+        document.getElementById('startDateError').style.display = 'block';
+        isValid = false;
+      }
+      
+      // Validate end date
+      const endDate = document.getElementById('endDate').value;
+      if (!endDate) {
+        document.getElementById('endDateError').textContent = 'Vui lòng chọn ngày kết thúc';
+        document.getElementById('endDateError').style.display = 'block';
+        isValid = false;
+      } else if (!validateEndDate()) {
+        isValid = false;
+      }
+      
+      // Validate total quantity
+      const totalQuantity = document.getElementById('totalQuantity').value;
+      if (!totalQuantity || totalQuantity <= 0) {
+        document.getElementById('quantityError').style.display = 'block';
+        isValid = false;
+      }
+      
+      // Validate per user limit
+      const perUserLimit = document.getElementById('perUserLimit').value;
+      if (!perUserLimit || perUserLimit <= 0) {
+        document.getElementById('limitError').style.display = 'block';
+        isValid = false;
+      }
+      
+      return isValid;
+    }
+    
     // Lưu voucher
     function saveVoucher() {
       if (!validateForm()) return;
       
       const voucherCode = document.getElementById('voucherCode').value.trim();
       const voucherName = document.getElementById('voucherName').value.trim();
-      const discountType = document.querySelector('input[name="discountType"]:checked').value;
       const discountValue = parseFloat(document.getElementById('discountValue').value);
       const minOrder = document.getElementById('minOrder').value ? parseFloat(document.getElementById('minOrder').value) : 0;
       const maxDiscount = document.getElementById('maxDiscount').value ? parseFloat(document.getElementById('maxDiscount').value) : 0;
@@ -1269,7 +1430,7 @@
       const voucherData = {
         code: voucherCode,
         name: voucherName,
-        discountType: discountType,
+        discountType: 'percent', // Mặc định là phần trăm
         discountValue: discountValue,
         minOrder: minOrder,
         maxDiscount: maxDiscount,
@@ -1314,68 +1475,6 @@
     // Cập nhật voucher
     function updateVoucher() {
       saveVoucher(); // Sử dụng cùng hàm với thêm mới
-    }
-    
-    // Validate form
-    function validateForm() {
-      let isValid = true;
-      
-      // Reset errors
-      document.querySelectorAll('.error-message').forEach(el => {
-        el.style.display = 'none';
-      });
-      
-      // Validate voucher code
-      const voucherCode = document.getElementById('voucherCode').value.trim();
-      const codeRegex = /^[a-zA-Z0-9_-]+$/;
-      if (!voucherCode || !codeRegex.test(voucherCode)) {
-        document.getElementById('codeError').style.display = 'block';
-        isValid = false;
-      }
-      
-      // Validate voucher name
-      const voucherName = document.getElementById('voucherName').value.trim();
-      if (!voucherName) {
-        document.getElementById('nameError').style.display = 'block';
-        isValid = false;
-      }
-      
-      // Validate discount value
-      const discountValue = document.getElementById('discountValue').value;
-      if (!discountValue || discountValue <= 0) {
-        document.getElementById('valueError').style.display = 'block';
-        isValid = false;
-      }
-      
-      // Validate start date
-      const startDate = document.getElementById('startDate').value;
-      if (!startDate) {
-        document.getElementById('startDateError').style.display = 'block';
-        isValid = false;
-      }
-      
-      // Validate end date
-      const endDate = document.getElementById('endDate').value;
-      if (!endDate) {
-        document.getElementById('endDateError').style.display = 'block';
-        isValid = false;
-      }
-      
-      // Validate total quantity
-      const totalQuantity = document.getElementById('totalQuantity').value;
-      if (!totalQuantity || totalQuantity <= 0) {
-        document.getElementById('quantityError').style.display = 'block';
-        isValid = false;
-      }
-      
-      // Validate per user limit
-      const perUserLimit = document.getElementById('perUserLimit').value;
-      if (!perUserLimit || perUserLimit <= 0) {
-        document.getElementById('limitError').style.display = 'block';
-        isValid = false;
-      }
-      
-      return isValid;
     }
     
     // Toggle trạng thái voucher
@@ -1438,6 +1537,17 @@
       userVouchersRef.once('value')
         .then(snapshot => {
           const vouchers = snapshot.val();
+          existingVouchers = [];
+          
+          if (vouchers) {
+            Object.keys(vouchers).forEach(key => {
+              existingVouchers.push({
+                id: key,
+                ...vouchers[key]
+              });
+            });
+          }
+          
           renderVoucherList(vouchers);
           
           // Hiển thị trạng thái trống nếu không có voucher
@@ -1467,15 +1577,7 @@
         const voucher = vouchers[key];
         
         // Định dạng giá trị giảm
-        let discountValue = '';
-        if (voucher.discountType === 'percent') {
-          discountValue = `${voucher.discountValue}%`;
-        } else {
-          discountValue = new Intl.NumberFormat('vi-VN', {
-            style: 'currency',
-            currency: 'VND'
-          }).format(voucher.discountValue);
-        }
+        let discountValue = `${voucher.discountValue}%`;
         
         // Định dạng ngày hết hạn
         const endDate = new Date(voucher.endDate);
@@ -1501,7 +1603,7 @@
           <td>${voucher.code}</td>
           <td>${voucher.name}</td>
           <td>${voucher.used || 0}/${voucher.total}</td>
-          <td>${voucher.discountType === 'percent' ? 'Phần trăm' : 'Tiền mặt'}</td>
+          <td>Phần trăm</td>
           <td>${discountValue}</td>
           <td>${formattedEndDate}</td>
           <td>
@@ -1643,6 +1745,11 @@
       addVoucherBtn.addEventListener('click', () => {
         openVoucherModal('add');
       });
+      
+      // Thiết lập ngày tối thiểu cho input date
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('startDate').min = today;
+      document.getElementById('endDate').min = today;
     });
   </script>
 </body>

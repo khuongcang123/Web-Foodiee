@@ -572,7 +572,7 @@
     .form-group select,
     .form-group textarea {
       width: 100%;
-      padding: 12px 15px 12px 40px;
+      padding: 12px 15px;
       border: 1px solid #ddd;
       border-radius: 6px;
       font-size: 1rem;
@@ -769,6 +769,14 @@
       top: 40px;
       color: var(--gray);
       font-size: 16px;
+    }
+    
+    /* Error message */
+    .error-message {
+      color: var(--accent);
+      font-size: 0.85rem;
+      margin-top: 5px;
+      display: none;
     }
     
     /* Empty state */
@@ -1011,28 +1019,27 @@
         <div class="form-row">
           <div class="form-group">
             <label for="menu-code"><i class="fas fa-barcode"></i> Mã món *</label>
-            <div class="form-icon"><i class="fas fa-barcode"></i></div>
-            <input type="text" id="menu-code" placeholder="VD: SP001">
+            <input type="text" id="menu-code" class="form-control" placeholder="VD: SP001">
+            <div class="error-message" id="menu-code-error"></div>
           </div>
           <div class="form-group">
             <label for="menu-name"><i class="fas fa-utensils"></i> Tên món *</label>
-            <div class="form-icon"><i class="fas fa-utensils"></i></div>
-            <input type="text" id="menu-name" placeholder="VD: Trà sữa trân châu">
+            <input type="text" id="menu-name" class="form-control" placeholder="VD: Trà sữa trân châu">
+            <div class="error-message" id="menu-name-error"></div>
           </div>
         </div>
         
         <div class="form-row">
           <div class="form-group">
             <label for="menu-category"><i class="fas fa-list"></i> Danh mục *</label>
-            <div class="form-icon"><i class="fas fa-list"></i></div>
-            <select id="menu-category">
+            <select id="menu-category" class="form-control">
               <option value="">Đang tải danh mục...</option>
             </select>
+            <div class="error-message" id="menu-category-error"></div>
           </div>
           <div class="form-group">
             <label for="menu-status"><i class="fas fa-power-off"></i> Trạng thái *</label>
-            <div class="form-icon"><i class="fas fa-power-off"></i></div>
-            <select id="menu-status">
+            <select id="menu-status" class="form-control">
               <option value="active">Hoạt động</option>
               <option value="inactive">Ngừng bán</option>
             </select>
@@ -1042,13 +1049,13 @@
         <div class="form-row">
           <div class="form-group">
             <label for="menu-base-price"><i class="fas fa-tag"></i> Giá gốc (VNĐ) *</label>
-            <div class="form-icon"><i class="fas fa-tag"></i></div>
-            <input type="number" id="menu-base-price" placeholder="VD: 35000" min="0">
+            <input type="number" id="menu-base-price" class="form-control" placeholder="VD: 35000" min="0">
+            <div class="error-message" id="menu-base-price-error"></div>
           </div>
           <div class="form-group">
             <label for="menu-sale-price"><i class="fas fa-percent"></i> Giá khuyến mãi (VNĐ)</label>
-            <div class="form-icon"><i class="fas fa-percent"></i></div>
-            <input type="number" id="menu-sale-price" placeholder="VD: 30000" min="0">
+            <input type="number" id="menu-sale-price" class="form-control" placeholder="VD: 30000" min="0">
+            <div class="error-message" id="menu-sale-price-error"></div>
           </div>
         </div>
         
@@ -1068,11 +1075,11 @@
           <div class="side-product-options" id="side-product-options">
             <div class="form-group">
               <label for="side-product-main"><i class="fas fa-link"></i> Áp dụng cho sản phẩm chính *</label>
-              <div class="form-icon"><i class="fas fa-link"></i></div>
-              <select id="side-product-main">
+              <select id="side-product-main" class="form-control">
                 <option value="">Chọn sản phẩm chính</option>
                 <!-- Main products will be loaded here -->
               </select>
+              <div class="error-message" id="side-product-main-error"></div>
             </div>
           </div>
         </div>
@@ -1085,6 +1092,7 @@
           <div class="image-preview-container" id="image-preview-container">
             <!-- Image previews will be added here -->
           </div>
+          <div class="error-message" id="menu-images-error"></div>
         </div>
         
         <div class="form-group">
@@ -1092,12 +1100,12 @@
           <div class="branches-selection" id="branches-selection">
             <!-- Branches will be loaded here -->
           </div>
+          <div class="error-message" id="menu-branches-error"></div>
         </div>
         
         <div class="form-group">
           <label for="menu-description"><i class="fas fa-align-left"></i> Mô tả sản phẩm</label>
-          <div class="form-icon"><i class="fas fa-align-left"></i></div>
-          <textarea id="menu-description" rows="4" placeholder="Mô tả chi tiết về món ăn..."></textarea>
+          <textarea id="menu-description" class="form-control" rows="4" placeholder="Mô tả chi tiết về món ăn..."></textarea>
         </div>
       </div>
       <div class="form-footer">
@@ -1154,6 +1162,7 @@
     let currentImages = [];
     let uploadcareWidget = null;
     let currentEditingItem = null;
+    let existingMenuItems = [];
     
     // Toggle sidebar
     function toggleSidebar() {
@@ -1378,6 +1387,155 @@
         });
     }
     
+    // Kiểm tra mã sản phẩm đã tồn tại
+    function isCodeExists(code, excludeId = null) {
+      return existingMenuItems.some(item => 
+        item.code.toLowerCase() === code.toLowerCase() && 
+        (!excludeId || item.id !== excludeId)
+      );
+    }
+
+    // Kiểm tra tên sản phẩm đã tồn tại
+    function isNameExists(name, excludeId = null) {
+      return existingMenuItems.some(item => 
+        item.name.toLowerCase() === name.toLowerCase() && 
+        (!excludeId || item.id !== excludeId)
+      );
+    }
+
+    // Hiển thị lỗi validation
+    function showValidationError(inputId, message) {
+      const errorDiv = document.getElementById(`${inputId}-error`);
+      
+      if (errorDiv) {
+        errorDiv.textContent = message;
+        errorDiv.style.display = 'block';
+      }
+      
+      const input = document.getElementById(inputId);
+      if (input) {
+        input.style.borderColor = 'var(--accent)';
+      }
+    }
+
+    // Ẩn lỗi validation
+    function hideValidationError(inputId) {
+      const errorDiv = document.getElementById(`${inputId}-error`);
+      
+      if (errorDiv) {
+        errorDiv.style.display = 'none';
+      }
+      
+      const input = document.getElementById(inputId);
+      if (input) {
+        input.style.borderColor = '';
+      }
+    }
+
+    // Kiểm tra mã sản phẩm real-time
+    function checkMenuCode() {
+      const code = document.getElementById('menu-code').value.trim();
+      const isEditing = !!currentEditingItem;
+      
+      if (!code) {
+        showValidationError('menu-code', 'Vui lòng nhập mã món');
+        return false;
+      }
+      
+      if (isCodeExists(code, isEditing ? currentEditingItem : null)) {
+        showValidationError('menu-code', 'Mã món đã tồn tại');
+        return false;
+      }
+      
+      hideValidationError('menu-code');
+      return true;
+    }
+
+    // Kiểm tra tên sản phẩm real-time
+    function checkMenuName() {
+      const name = document.getElementById('menu-name').value.trim();
+      const isEditing = !!currentEditingItem;
+      
+      if (!name) {
+        showValidationError('menu-name', 'Vui lòng nhập tên món');
+        return false;
+      }
+      
+      if (isNameExists(name, isEditing ? currentEditingItem : null)) {
+        showValidationError('menu-name', 'Tên món đã tồn tại');
+        return false;
+      }
+      
+      hideValidationError('menu-name');
+      return true;
+    }
+
+    // Validate form
+    function validateForm() {
+      let isValid = true;
+      
+      // Reset all errors
+      document.querySelectorAll('.error-message').forEach(el => {
+        el.style.display = 'none';
+      });
+      
+      document.querySelectorAll('.form-control').forEach(input => {
+        input.style.borderColor = '';
+      });
+      
+      // Validate code
+      if (!checkMenuCode()) isValid = false;
+      
+      // Validate name
+      if (!checkMenuName()) isValid = false;
+      
+      // Validate category
+      const categoryId = document.getElementById('menu-category').value;
+      if (!categoryId) {
+        showValidationError('menu-category', 'Vui lòng chọn danh mục');
+        isValid = false;
+      }
+      
+      // Validate base price
+      const basePrice = parseInt(document.getElementById('menu-base-price').value) || 0;
+      if (basePrice <= 0) {
+        showValidationError('menu-base-price', 'Giá gốc phải lớn hơn 0');
+        isValid = false;
+      }
+      
+      // Validate sale price
+      const salePrice = parseInt(document.getElementById('menu-sale-price').value) || 0;
+      if (salePrice > 0 && salePrice >= basePrice) {
+        showValidationError('menu-sale-price', 'Giá khuyến mãi phải nhỏ hơn giá gốc');
+        isValid = false;
+      }
+      
+      // Validate product type
+      const productType = document.querySelector('input[name="product-type"]:checked').value;
+      if (productType === 'side') {
+        const mainProductId = document.getElementById('side-product-main').value;
+        if (!mainProductId) {
+          showValidationError('side-product-main', 'Vui lòng chọn sản phẩm chính');
+          isValid = false;
+        }
+      }
+      
+      // Validate branches
+      const selectedBranches = document.querySelectorAll('#branches-selection input[type="checkbox"]:checked:not(#branch-all)');
+      if (selectedBranches.length === 0) {
+        showValidationError('menu-branches', 'Vui lòng chọn ít nhất một chi nhánh');
+        isValid = false;
+      }
+      
+      // Validate images
+      if (currentImages.length === 0) {
+        showValidationError('menu-images', 'Vui lòng tải lên ít nhất một ảnh');
+        isValid = false;
+      }
+      
+      return isValid;
+    }
+
     // Open menu modal (add or edit)
     function openMenuModal(mode, itemId = null) {
       const modal = document.getElementById('menu-modal');
@@ -1400,6 +1558,7 @@
       
       // Reset form
       document.getElementById('menu-code').value = '';
+      document.getElementById('menu-code').disabled = (mode === 'edit');
       document.getElementById('menu-name').value = '';
       document.getElementById('menu-base-price').value = '';
       document.getElementById('menu-sale-price').value = '';
@@ -1409,6 +1568,15 @@
       document.getElementById('side-product-main').selectedIndex = 0;
       document.getElementById('product-type-main').checked = true;
       document.getElementById('side-product-options').style.display = 'none';
+      
+      // Xóa các thông báo lỗi cũ
+      document.querySelectorAll('.error-message').forEach(el => {
+        el.style.display = 'none';
+      });
+      
+      document.querySelectorAll('.form-control').forEach(input => {
+        input.style.borderColor = '';
+      });
       
       // Reset product type UI
       document.getElementById('main-product-option').classList.add('active');
@@ -1469,6 +1637,12 @@
         this.classList.add('active');
         document.getElementById('main-product-option').classList.remove('active');
       });
+      
+      // Thêm sự kiện kiểm tra real-time
+      document.getElementById('menu-code').addEventListener('input', checkMenuCode);
+      document.getElementById('menu-code').addEventListener('blur', checkMenuCode);
+      document.getElementById('menu-name').addEventListener('input', checkMenuName);
+      document.getElementById('menu-name').addEventListener('blur', checkMenuName);
     }
     
     // Close menu modal
@@ -1509,6 +1683,9 @@
         return;
       }
       
+      // Validate form
+      if (!validateForm()) return;
+      
       // Get form values
       const code = document.getElementById('menu-code').value.trim();
       const name = document.getElementById('menu-name').value.trim();
@@ -1525,42 +1702,6 @@
       document.querySelectorAll('#branches-selection input[type="checkbox"]:checked:not(#branch-all)').forEach(checkbox => {
         selectedBranches.push(checkbox.value);
       });
-      
-      // Validation
-      if (!code || !name) {
-        showToast('Vui lòng nhập mã và tên món', 'error');
-        return;
-      }
-      
-      if (!categoryId) {
-        showToast('Vui lòng chọn danh mục', 'error');
-        return;
-      }
-      
-      if (basePrice <= 0) {
-        showToast('Giá gốc phải lớn hơn 0', 'error');
-        return;
-      }
-      
-      if (salePrice > 0 && salePrice >= basePrice) {
-        showToast('Giá khuyến mãi phải nhỏ hơn giá gốc', 'error');
-        return;
-      }
-      
-      if (productType === 'side' && !mainProductId) {
-        showToast('Vui lòng chọn sản phẩm chính để áp dụng', 'error');
-        return;
-      }
-      
-      if (selectedBranches.length === 0) {
-        showToast('Vui lòng chọn ít nhất một chi nhánh', 'error');
-        return;
-      }
-      
-      if (currentImages.length === 0) {
-        showToast('Vui lòng tải lên ít nhất một ảnh', 'error');
-        return;
-      }
       
       // Find category name
       const category = categories.find(c => c.id === categoryId);
@@ -1655,6 +1796,9 @@
         return;
       }
       
+      // Validate form
+      if (!validateForm()) return;
+      
       // Get form values
       const name = document.getElementById('menu-name').value.trim();
       const categoryId = document.getElementById('menu-category').value;
@@ -1670,42 +1814,6 @@
       document.querySelectorAll('#branches-selection input[type="checkbox"]:checked:not(#branch-all)').forEach(checkbox => {
         selectedBranches.push(checkbox.value);
       });
-      
-      // Validation
-      if (!name) {
-        showToast('Vui lòng nhập tên món', 'error');
-        return;
-      }
-      
-      if (!categoryId) {
-        showToast('Vui lòng chọn danh mục', 'error');
-        return;
-      }
-      
-      if (basePrice <= 0) {
-        showToast('Giá gốc phải lớn hơn 0', 'error');
-        return;
-      }
-      
-      if (salePrice > 0 && salePrice >= basePrice) {
-        showToast('Giá khuyến mãi phải nhỏ hơn giá gốc', 'error');
-        return;
-      }
-      
-      if (productType === 'side' && !mainProductId) {
-        showToast('Vui lòng chọn sản phẩm chính để áp dụng', 'error');
-        return;
-      }
-      
-      if (selectedBranches.length === 0) {
-        showToast('Vui lòng chọn ít nhất một chi nhánh', 'error');
-        return;
-      }
-      
-      if (currentImages.length === 0) {
-        showToast('Vui lòng tải lên ít nhất một ảnh', 'error');
-        return;
-      }
       
       // Find category name
       const category = categories.find(c => c.id === categoryId);
@@ -1742,24 +1850,23 @@
     
     // Toggle menu item status
     function toggleMenuItemStatus(code, currentStatus) {
-  if (!currentUser) return;
-  
-  const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
-  const statusText = newStatus === 'active' ? 'kích hoạt' : 'vô hiệu hóa';
-  
-  // Sửa đường dẫn và dùng update thay vì set
-  const ref = database.ref(`users/${currentUser.uid}/menu/${code}`);
-  
-  ref.update({ status: newStatus })
-    .then(() => {
-      loadMenuItems();
-      showToast(`Đã ${statusText} món ăn thành công!`, 'success');
-    })
-    .catch(error => {
-      console.error('Lỗi khi cập nhật trạng thái:', error);
-      showToast('Có lỗi xảy ra khi thay đổi trạng thái', 'error');
-    });
-}
+      if (!currentUser) return;
+      
+      const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+      const statusText = newStatus === 'active' ? 'kích hoạt' : 'vô hiệu hóa';
+      
+      const ref = database.ref(`users/${currentUser.uid}/menu/${code}`);
+      
+      ref.update({ status: newStatus })
+        .then(() => {
+          loadMenuItems();
+          showToast(`Đã ${statusText} món ăn thành công!`, 'success');
+        })
+        .catch(error => {
+          console.error('Lỗi khi cập nhật trạng thái:', error);
+          showToast('Có lỗi xảy ra khi thay đổi trạng thái', 'error');
+        });
+    }
     
     // Open confirm delete modal
     function openConfirmDeleteModal(code) {
@@ -1801,6 +1908,16 @@
       database.ref(`users/${currentUser.uid}/menu`).once('value')
         .then(snapshot => {
           const data = snapshot.val();
+          existingMenuItems = []; // Reset danh sách sản phẩm hiện có
+          
+          if (data) {
+            Object.keys(data).forEach(key => {
+              const item = data[key];
+              item.id = key;
+              existingMenuItems.push(item);
+            });
+          }
+          
           renderMenuItems(data);
           
           // Show empty state if no items

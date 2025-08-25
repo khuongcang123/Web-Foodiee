@@ -795,6 +795,12 @@
       font-weight: bold;
     }
     
+    .error-message {
+      color: var(--accent);
+      font-size: 0.85rem;
+      margin-top: 5px;
+      display: none;
+    }
     /* Responsive */
     @media (max-width: 992px) {
       .sidebar {
@@ -880,6 +886,7 @@
   </style>
 </head>
 <body>
+  <!-- HTML giữ nguyên như trước -->
   <div class="sidebar" id="sidebar">
     <button class="toggle-btn" onclick="toggleSidebar()">
       <i class="fas fa-bars"></i>
@@ -980,11 +987,13 @@
       <div class="modal-body">
         <div class="form-group">
           <label for="branch-code">Mã chi nhánh *</label>
-          <input type="text" id="branch-code" placeholder="VD: CN001">
+          <input type="text" id="branch-code" placeholder="VD: CN001" oninput="checkBranchCode()">
+          <div id="branch-code-error" class="error-message">Mã chi nhánh đã tồn tại</div>
         </div>
         <div class="form-group">
           <label for="branch-name">Tên chi nhánh *</label>
-          <input type="text" id="branch-name" placeholder="VD: Chi nhánh trung tâm">
+          <input type="text" id="branch-name" placeholder="VD: Chi nhánh trung tâm" oninput="checkBranchName()">
+          <div id="branch-name-error" class="error-message">Tên chi nhánh đã tồn tại</div>
         </div>
         
         <div class="form-group">
@@ -1041,7 +1050,7 @@
       </div>
       <div class="form-footer">
         <button class="btn" onclick="closeAddBranchModal()">Hủy</button>
-        <button class="btn btn-success" onclick="saveBranch()">Lưu</button>
+        <button class="btn btn-success" id="save-branch-btn" onclick="saveBranch()">Lưu</button>
       </div>
     </div>
   </div>
@@ -1099,6 +1108,7 @@
     const accountLimitText = document.getElementById('account-limit-text');
     const addBranchBtn = document.getElementById('add-branch-btn');
     const addFirstBranchBtn = document.getElementById('add-first-branch-btn');
+    const saveBranchBtn = document.getElementById('save-branch-btn');
     
     // Sample branch data structure
     let branches = {};
@@ -1111,6 +1121,10 @@
     
     // Uploadcare widget
     let uploadcareWidget = null;
+    
+    // Validation flags
+    let isBranchCodeValid = false;
+    let isBranchNameValid = false;
     
     // Toggle sidebar
     function toggleSidebar() {
@@ -1321,6 +1335,76 @@
       }
     }
     
+    // Check if branch code already exists
+    function checkBranchCode() {
+      const code = document.getElementById('branch-code').value.trim();
+      const errorElement = document.getElementById('branch-code-error');
+      
+      if (!code) {
+        errorElement.style.display = 'none';
+        isBranchCodeValid = false;
+        updateSaveButtonState();
+        return;
+      }
+      
+      // Check if code exists in current branches
+      const codeExists = Object.values(branches).some(branch => 
+        branch.code.toLowerCase() === code.toLowerCase()
+      );
+      
+      if (codeExists) {
+        errorElement.style.display = 'block';
+        isBranchCodeValid = false;
+      } else {
+        errorElement.style.display = 'none';
+        isBranchCodeValid = true;
+      }
+      
+      updateSaveButtonState();
+    }
+    
+    // Check if branch name already exists
+    function checkBranchName() {
+      const name = document.getElementById('branch-name').value.trim();
+      const errorElement = document.getElementById('branch-name-error');
+      
+      if (!name) {
+        errorElement.style.display = 'none';
+        isBranchNameValid = false;
+        updateSaveButtonState();
+        return;
+      }
+      
+      // Check if name exists in current branches
+      const nameExists = Object.values(branches).some(branch => 
+        branch.name.toLowerCase() === name.toLowerCase()
+      );
+      
+      if (nameExists) {
+        errorElement.style.display = 'block';
+        isBranchNameValid = false;
+      } else {
+        errorElement.style.display = 'none';
+        isBranchNameValid = true;
+      }
+      
+      updateSaveButtonState();
+    }
+    
+    // Update save button state based on validation
+    function updateSaveButtonState() {
+      const code = document.getElementById('branch-code').value.trim();
+      const name = document.getElementById('branch-name').value.trim();
+      
+      if (code && name && isBranchCodeValid && isBranchNameValid) {
+        saveBranchBtn.disabled = false;
+        saveBranchBtn.classList.remove('disabled');
+      } else {
+        saveBranchBtn.disabled = true;
+        saveBranchBtn.classList.add('disabled');
+      }
+    }
+    
     // Modal functions
     function openAddBranchModal() {
       if (!currentUser) {
@@ -1351,6 +1435,14 @@
       document.getElementById('coordinate-result').innerHTML = '<p>Chưa có thông tin địa chỉ</p>';
       document.getElementById('coordinate-result').className = 'coordinates-result';
       document.getElementById('branch-status').value = 'active';
+      
+      // Reset error messages
+      document.getElementById('branch-code-error').style.display = 'none';
+      document.getElementById('branch-name-error').style.display = 'none';
+      
+      // Reset validation flags
+      isBranchCodeValid = false;
+      isBranchNameValid = false;
 
       document.getElementById('branch-code').disabled = false;
       document.querySelector('.btn-success').textContent = 'Lưu';
@@ -1378,6 +1470,9 @@
       } else {
         uploadcareWidget.value(null);
       }
+      
+      // Update save button state
+      updateSaveButtonState();
     }
     
     function closeAddBranchModal() {
@@ -1393,6 +1488,10 @@
       document.getElementById('coordinate-result').innerHTML = '<p>Chưa có thông tin địa chỉ</p>';
       document.getElementById('coordinate-result').className = 'coordinates-result';
       document.getElementById('branch-status').value = 'active';
+      
+      // Reset error messages
+      document.getElementById('branch-code-error').style.display = 'none';
+      document.getElementById('branch-name-error').style.display = 'none';
 
       document.getElementById('branch-code').disabled = false;
       document.querySelector('.btn-success').textContent = 'Lưu';
@@ -1425,48 +1524,48 @@
     }
     
     // Hàm kiểm tra xem chi nhánh có bàn đang hoạt động hoặc đã đặt không
-function checkBranchHasActiveTables(branchCode) {
-  return new Promise((resolve, reject) => {
-    if (!currentUser) {
-      resolve({
-        hasActiveTables: false,
-        activeTables: []
-      });
-      return;
-    }
+    function checkBranchHasActiveTables(branchCode) {
+      return new Promise((resolve, reject) => {
+        if (!currentUser) {
+          resolve({
+            hasActiveTables: false,
+            activeTables: []
+          });
+          return;
+        }
 
-    // Truy vấn trực tiếp từ Firebase để lấy dữ liệu mới nhất
-    const tablesRef = database.ref(`users/${currentUser.uid}/branches/${branchCode}/local/tables`);
-    
-    tablesRef.once('value')
-      .then(snapshot => {
-        const tables = snapshot.val() || {};
-        let hasActiveTables = false;
-        let activeTables = [];
+        // Truy vấn trực tiếp từ Firebase để lấy dữ liệu mới nhất
+        const tablesRef = database.ref(`users/${currentUser.uid}/branches/${branchCode}/local/tables`);
         
-        Object.values(tables).forEach(table => {
-          // Kiểm tra bàn đang sử dụng (in-use) hoặc đã đặt trước (reserved)
-          if (table.status === 'in-use' || table.status === 'reserved') {
-            hasActiveTables = true;
-            activeTables.push(table.name || `Bàn ${table.code}`);
-          }
-        });
+        tablesRef.once('value')
+          .then(snapshot => {
+            const tables = snapshot.val() || {};
+            let hasActiveTables = false;
+            let activeTables = [];
+            
+            Object.values(tables).forEach(table => {
+              // Kiểm tra bàn đang sử dụng (in-use) hoặc đã đặt trước (reserved)
+              if (table.status === 'in-use' || table.status === 'reserved') {
+                hasActiveTables = true;
+                activeTables.push(table.name || `Bàn ${table.code}`);
+              }
+            });
 
-        resolve({
-          hasActiveTables: hasActiveTables,
-          activeTables: activeTables
-        });
-      })
-      .catch(error => {
-        console.error('Lỗi khi kiểm tra bàn:', error);
-        // Nếu có lỗi, giả định là không có bàn hoạt động để không chặn người dùng
-        resolve({
-          hasActiveTables: false,
-          activeTables: []
-        });
+            resolve({
+              hasActiveTables: hasActiveTables,
+              activeTables: activeTables
+            });
+          })
+          .catch(error => {
+            console.error('Lỗi khi kiểm tra bàn:', error);
+            // Nếu có lỗi, giả định là không có bàn hoạt động để không chặn người dùng
+            resolve({
+              hasActiveTables: false,
+              activeTables: []
+            });
+          });
       });
-  });
-}
+    }
 
     // Save branch to Firebase under user's node
     function saveBranch() {
@@ -1495,6 +1594,31 @@ function checkBranchHasActiveTables(branchCode) {
       
       if (!code || !name || !province || !addressDetail || !mapUrl || !latitude || !longitude) {
         showToast('Vui lòng điền đầy đủ thông tin và lấy thông tin địa chỉ', 'error');
+        return;
+      }
+      
+      // Double-check for duplicates (in case user bypassed the oninput validation)
+      const codeExists = Object.values(branches).some(branch => 
+        branch.code.toLowerCase() === code.toLowerCase()
+      );
+      
+      const nameExists = Object.values(branches).some(branch => 
+        branch.name.toLowerCase() === name.toLowerCase()
+      );
+      
+      if (codeExists) {
+        document.getElementById('branch-code-error').style.display = 'block';
+        isBranchCodeValid = false;
+        updateSaveButtonState();
+        showToast('Mã chi nhánh đã tồn tại!', 'error');
+        return;
+      }
+      
+      if (nameExists) {
+        document.getElementById('branch-name-error').style.display = 'block';
+        isBranchNameValid = false;
+        updateSaveButtonState();
+        showToast('Tên chi nhánh đã tồn tại!', 'error');
         return;
       }
       
@@ -1587,11 +1711,6 @@ function checkBranchHasActiveTables(branchCode) {
             <button class="action-btn edit" title="Chỉnh sửa" onclick="editBranch('${branch.code}')">
               <i class="fas fa-edit"></i>
             </button>
-            <button class="action-btn ${branch.status === 'active' ? 'disabled' : 'delete'}" 
-                     title="${branch.status === 'active' ? 'Không thể xóa chi nhánh đang hoạt động' : 'Xóa'}" 
-                     onclick="${branch.status === 'inactive' ? `deleteBranch('${branch.code}')` : 'showToast("Không thể xóa chi nhánh đang hoạt động", "warning")'}">
-              <i class="fas fa-trash"></i>
-            </button>
           </td>
         `;
 
@@ -1635,6 +1754,14 @@ function checkBranchHasActiveTables(branchCode) {
       // Disable chỉnh mã
       document.getElementById('branch-code').disabled = true;
 
+      // Ẩn thông báo lỗi
+      document.getElementById('branch-code-error').style.display = 'none';
+      document.getElementById('branch-name-error').style.display = 'none';
+      
+      // Đặt validation flags
+      isBranchCodeValid = true;
+      isBranchNameValid = true;
+
       // Đổi nút lưu
       const saveBtn = document.querySelector('.btn-success');
       saveBtn.textContent = 'Cập nhật';
@@ -1656,6 +1783,17 @@ function checkBranchHasActiveTables(branchCode) {
           return;
         }
 
+        // Kiểm tra xem tên mới có trùng với chi nhánh khác không
+        const nameExists = Object.values(branches).some(b => 
+          b.code !== code && b.name.toLowerCase() === updatedData.name.toLowerCase()
+        );
+        
+        if (nameExists) {
+          document.getElementById('branch-name-error').style.display = 'block';
+          showToast('Tên chi nhánh đã tồn tại!', 'error');
+          return;
+        }
+
         // Nếu đang cập nhật trạng thái thành inactive
         if (updatedData.status === 'inactive') {
           // Kiểm tra xem chi nhánh có bàn đang hoạt động không
@@ -1674,6 +1812,9 @@ function checkBranchHasActiveTables(branchCode) {
           updateBranchData(code, updatedData);
         }
       };
+      
+      // Update save button state
+      updateSaveButtonState();
     }
     
     // Hàm thực hiện cập nhật dữ liệu chi nhánh
@@ -1738,42 +1879,6 @@ function checkBranchHasActiveTables(branchCode) {
         } else {
           rows[i].style.display = 'none';
         }
-      }
-    }
-    
-    // Delete branch (only inactive branches)
-    function deleteBranch(code) {
-      if (!currentUser) {
-        showToast('Bạn chưa đăng nhập!', 'error');
-        return;
-      }
-      
-      const branch = branches[code];
-      
-      // Kiểm tra trạng thái chi nhánh
-      if (branch.status === 'active') {
-        showToast('Không thể xóa chi nhánh đang hoạt động!', 'warning');
-        return;
-      }
-      
-      if (confirm(`Bạn có chắc chắn muốn xóa chi nhánh ${branch.name} (${code})?`)) {
-        database.ref(`users/${currentUser.uid}/branches/${code}`).remove()
-          .then(() => {
-            loadBranches();
-            showToast('Đã xóa chi nhánh thành công!', 'success');
-            
-            // Add notification
-            addNotification(
-              "Xóa chi nhánh",
-              `Chi nhánh ${branch.name} (${code}) đã bị xóa khỏi hệ thống`,
-              "branch_delete",
-              "warning"
-            );
-          })
-          .catch(error => {
-            console.error('Error deleting branch:', error);
-            showToast('Có lỗi xảy ra: ' + error.message, 'error');
-          });
       }
     }
     

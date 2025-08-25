@@ -702,6 +702,19 @@
       100% { transform: rotate(360deg); }
     }
     
+    /* Validation styles */
+    .error-message {
+      color: var(--accent);
+      font-size: 12px;
+      margin-top: 5px;
+      display: none;
+    }
+    
+    .input-error {
+      border-color: var(--accent) !important;
+      box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.2) !important;
+    }
+    
     /* Responsive */
     @media (max-width: 992px) {
       .sidebar {
@@ -882,11 +895,13 @@
           <div class="form-group">
             <label for="customerName">Tên khách hàng *</label>
             <input type="text" id="customerName" required>
+            <div id="nameError" class="error-message">Vui lòng nhập tên khách hàng</div>
           </div>
           
           <div class="form-group">
             <label for="customerPhone">Số điện thoại *</label>
-            <input type="tel" id="customerPhone" required>
+            <input type="tel" id="customerPhone" required maxlength="10">
+            <div id="phoneError" class="error-message">Số điện thoại phải bắt đầu bằng 0 và có 10 chữ số</div>
           </div>
           
           <div class="form-group">
@@ -908,7 +923,7 @@
       </div>
     </div>
   </div>
-  
+
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
@@ -947,6 +962,8 @@
     const customerRankSelect = document.getElementById('customerRank');
     const loadingCustomers = document.getElementById('loadingCustomers');
     const noCustomers = document.getElementById('noCustomers');
+    const nameError = document.getElementById('nameError');
+    const phoneError = document.getElementById('phoneError');
     
     // Xác định hạng khách hàng dựa trên số lần mua hàng
     function determineCustomerRank(totalOrders) {
@@ -967,6 +984,64 @@
         case "Kim cương": return "rank-diamond";
         default: return "rank-member";
       }
+    }
+    
+    // Kiểm tra số điện thoại hợp lệ
+    function isValidPhone(phone) {
+      const phoneRegex = /^0[0-9]{9}$/;
+      return phoneRegex.test(phone);
+    }
+    
+    // Kiểm tra số điện thoại đã tồn tại
+    function isPhoneExists(phone, excludeId = null) {
+      return customers.some(customer => 
+        customer.phone === phone && customer.id !== excludeId
+      );
+    }
+    
+    // Hiển thị lỗi
+    function showError(input, errorElement, message) {
+      input.classList.add('input-error');
+      errorElement.textContent = message;
+      errorElement.style.display = 'block';
+    }
+    
+    // Ẩn lỗi
+    function hideError(input, errorElement) {
+      input.classList.remove('input-error');
+      errorElement.style.display = 'none';
+    }
+    
+    // Validate form
+    function validateForm() {
+      let isValid = true;
+      const name = customerNameInput.value.trim();
+      const phone = customerPhoneInput.value.trim();
+      const customerId = customerIdInput.value;
+      
+      // Validate tên
+      if (!name) {
+        showError(customerNameInput, nameError, 'Vui lòng nhập tên khách hàng');
+        isValid = false;
+      } else {
+        hideError(customerNameInput, nameError);
+      }
+      
+      // Validate số điện thoại
+      if (!phone) {
+        showError(customerPhoneInput, phoneError, 'Vui lòng nhập số điện thoại');
+        isValid = false;
+      } else if (!isValidPhone(phone)) {
+        showError(customerPhoneInput, phoneError, 'Số điện thoại phải bắt đầu bằng 0 và có 10 chữ số');
+        isValid = false;
+      } else if (isPhoneExists(phone, customerId)) {
+        showError(customerPhoneInput, phoneError, 'Số điện thoại này đã tồn tại trong hệ thống');
+        isValid = false;
+      } else {
+        hideError(customerPhoneInput, phoneError);
+      }
+      
+      return isValid;
     }
     
     // Sidebar toggle
@@ -1039,6 +1114,24 @@
       document.getElementById('filterPhone').addEventListener('input', filterCustomers);
       document.getElementById('filterRank').addEventListener('change', filterCustomers);
       
+      // Xử lý sự kiện cho input số điện thoại
+      customerPhoneInput.addEventListener('input', function(e) {
+        // Chỉ cho phép nhập số
+        e.target.value = e.target.value.replace(/[^0-9]/g, '');
+        
+        // Validate real-time
+        const phone = e.target.value.trim();
+        const customerId = customerIdInput.value;
+        
+        if (phone && !isValidPhone(phone)) {
+          showError(customerPhoneInput, phoneError, 'Số điện thoại phải bắt đầu bằng 0 và có 10 chữ số');
+        } else if (phone && isPhoneExists(phone, customerId)) {
+          showError(customerPhoneInput, phoneError, 'Số điện thoại này đã tồn tại trong hệ thống');
+        } else {
+          hideError(customerPhoneInput, phoneError);
+        }
+      });
+      
       // Kiểm tra đăng nhập và tải dữ liệu
       auth.onAuthStateChanged((user) => {
         if (user) {
@@ -1080,6 +1173,11 @@
       customerForm.reset();
       customerIdInput.value = '';
       customerRankSelect.value = 'Thành viên';
+      
+      // Reset lỗi
+      hideError(customerNameInput, nameError);
+      hideError(customerPhoneInput, phoneError);
+      
       customerModal.style.display = 'flex';
     }
     
@@ -1095,6 +1193,10 @@
       customerPhoneInput.value = customer.phone || '';
       customerRankSelect.value = customer.rank || 'Thành viên';
       
+      // Reset lỗi
+      hideError(customerNameInput, nameError);
+      hideError(customerPhoneInput, phoneError);
+      
       customerModal.style.display = 'flex';
     }
     
@@ -1105,15 +1207,12 @@
     
     // Lưu khách hàng
     function saveCustomer() {
+      // Validate form
+      if (!validateForm()) return;
+      
       const customerId = customerIdInput.value;
       const name = customerNameInput.value.trim();
       const phone = customerPhoneInput.value.trim();
-      
-      // Kiểm tra dữ liệu bắt buộc
-      if (!name || !phone) {
-        showToast('Vui lòng điền đầy đủ thông tin bắt buộc', 'error');
-        return;
-      }
       
       // Tạo object dữ liệu khách hàng
       const customerData = {
@@ -1173,34 +1272,41 @@
       noCustomers.style.display = 'none';
       customerTableBody.innerHTML = '';
       
-      database.ref(`users/${currentUserId}/client`).on('value', (snapshot) => {
-        customers = [];
-        snapshot.forEach(childSnapshot => {
-          const customer = childSnapshot.val();
-          customer.id = childSnapshot.key;
+      // Sử dụng once() thay vì on() để tránh listener liên tục
+      database.ref(`users/${currentUserId}/client`).once('value')
+        .then((snapshot) => {
+          customers = [];
+          snapshot.forEach(childSnapshot => {
+            const customer = childSnapshot.val();
+            customer.id = childSnapshot.key;
+            
+            // Xác định hạng khách hàng dựa trên số lần mua hàng
+            customer.rank = determineCustomerRank(customer.totalOrders || 0);
+            
+            customers.push(customer);
+          });
           
-          // Xác định hạng khách hàng dựa trên số lần mua hàng
-          customer.rank = determineCustomerRank(customer.totalOrders || 0);
+          loadingCustomers.style.display = 'none';
           
-          customers.push(customer);
+          if (customers.length === 0) {
+            noCustomers.style.display = 'block';
+          } else {
+            noCustomers.style.display = 'none';
+          }
+          
+          // Sắp xếp theo số lần mua hàng giảm dần
+          customers.sort((a, b) => (b.totalOrders || 0) - (a.totalOrders || 0));
+          renderCustomers(customers);
+        })
+        .catch(error => {
+          loadingCustomers.style.display = 'none';
+          showToast('Có lỗi xảy ra khi tải dữ liệu: ' + error.message, 'error');
         });
-        
-        loadingCustomers.style.display = 'none';
-        
-        if (customers.length === 0) {
-          noCustomers.style.display = 'block';
-        } else {
-          noCustomers.style.display = 'none';
-        }
-        
-        // Sắp xếp theo số lần mua hàng giảm dần
-        customers.sort((a, b) => (b.totalOrders || 0) - (a.totalOrders || 0));
-        renderCustomers(customers);
-      });
     }
     
     // Hiển thị danh sách khách hàng
     function renderCustomers(customersList) {
+      // Xóa toàn bộ nội dung cũ trước khi render mới
       customerTableBody.innerHTML = '';
       
       customersList.forEach(customer => {

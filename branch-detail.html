@@ -3155,87 +3155,149 @@
     }
     
     function saveItem() {
-      const code = document.getElementById('item-code').value.trim();
-      const name = document.getElementById('item-name').value.trim();
-      const type = document.getElementById('item-type').value;
-      const quantity = parseFloat(document.getElementById('item-quantity').value);
-      const unit = document.getElementById('item-unit').value;
-      const status = document.getElementById('item-status').value;
-      
-      if (!code || !name || isNaN(quantity)) {
-        showToast('Vui lòng điền đầy đủ thông tin', 'error');
-        return;
-      }
-      
-      // Check item limit
-      const limits = accountLimits[currentUserRole] || accountLimits['admin base'];
-      if (Object.keys(items).length >= limits.items) {
-        showToast(`Bạn đã đạt giới hạn tối đa ${limits.items} hàng hóa`, 'error');
-        return;
-      }
-      
-      const itemData = {
-        code,
-        name,
-        type,
-        quantity,
-        unit,
-        status
-      };
-      
-      const itemRef = database.ref(`users/${currentUser.uid}/branches/${currentBranchCode}/warehouse`).push();
-      itemRef.set(itemData)
-        .then(() => {
-          closeAddItemModal();
-          showToast('Thêm hàng hóa thành công!', 'success');
-        })
-        .catch(error => {
-          console.error('Error saving item:', error);
-          showToast('Có lỗi xảy ra: ' + error.message, 'error');
-        });
-    }
+  const code = document.getElementById('item-code').value.trim();
+  const name = document.getElementById('item-name').value.trim();
+  const type = document.getElementById('item-type').value;
+  const quantity = parseFloat(document.getElementById('item-quantity').value);
+  const unit = document.getElementById('item-unit').value;
+  const status = document.getElementById('item-status').value;
+  
+  if (!code || !name || isNaN(quantity)) {
+    showToast('Vui lòng điền đầy đủ thông tin', 'error');
+    return;
+  }
+  
+  // Check item limit
+  const limits = accountLimits[currentUserRole] || accountLimits['admin base'];
+  if (Object.keys(items).length >= limits.items) {
+    showToast(`Bạn đã đạt giới hạn tối đa ${limits.items} hàng hóa`, 'error');
+    return;
+  }
+  
+  // Kiểm tra trùng mã hàng
+  const isCodeDuplicate = Object.values(items).some(item => item.code === code);
+  if (isCodeDuplicate) {
+    showToast('Mã hàng đã tồn tại', 'error');
+    return;
+  }
+  
+  // Kiểm tra trùng tên hàng
+  const isNameDuplicate = Object.values(items).some(item => item.name === name);
+  if (isNameDuplicate) {
+    showToast('Tên hàng đã tồn tại', 'error');
+    return;
+  }
+  
+  const itemData = {
+    code,
+    name,
+    type,
+    quantity,
+    unit,
+    status
+  };
+  
+  const itemRef = database.ref(`users/${currentUser.uid}/branches/${currentBranchCode}/warehouse`).push();
+  itemRef.set(itemData)
+    .then(() => {
+      closeAddItemModal();
+      showToast('Thêm hàng hóa thành công!', 'success');
+    })
+    .catch(error => {
+      console.error('Error saving item:', error);
+      showToast('Có lỗi xảy ra: ' + error.message, 'error');
+    });
+}
+
+    // Hàm xóa ca làm
+function deleteShift(shiftId) {
+  const shift = shifts[shiftId];
+  if (!shift) return;
+  
+  if (confirm(`Bạn có chắc chắn muốn xóa ca làm "${shift.name}"?`)) {
+    database.ref(`users/${currentUser.uid}/branches/${currentBranchCode}/shifts/${shiftId}`).remove()
+      .then(() => {
+        showToast('Xóa ca làm thành công!', 'success');
+      })
+      .catch(error => {
+        console.error('Error deleting shift:', error);
+        showToast('Có lỗi xảy ra: ' + error.message, 'error');
+      });
+  }
+}
+
+// Hàm xóa hàng hóa
+function deleteItem(itemId) {
+  const item = items[itemId];
+  if (!item) return;
+  
+  if (confirm(`Bạn có chắc chắn muốn xóa hàng hóa "${item.name}"?`)) {
+    database.ref(`users/${currentUser.uid}/branches/${currentBranchCode}/warehouse/${itemId}`).remove()
+      .then(() => {
+        showToast('Xóa hàng hóa thành công!', 'success');
+      })
+      .catch(error => {
+        console.error('Error deleting item:', error);
+        showToast('Có lỗi xảy ra: ' + error.message, 'error');
+      });
+  }
+}
     
     function saveShift() {
-      const code = document.getElementById('shift-code').value.trim();
-      const name = document.getElementById('shift-name').value.trim();
-      const startTime = document.getElementById('shift-start').value;
-      const endTime = document.getElementById('shift-end').value;
-      
-      if (!code || !name || !startTime || !endTime) {
-        showToast('Vui lòng điền đầy đủ thông tin', 'error');
-        return;
-      }
-      
-      if (startTime >= endTime) {
-        showToast('Giờ bắt đầu phải trước giờ kết thúc', 'error');
-        return;
-      }
-      
-      // Check shift limit
-      const limits = accountLimits[currentUserRole] || accountLimits['admin base'];
-      if (Object.keys(shifts).length >= limits.shifts) {
-        showToast(`Bạn đã đạt giới hạn tối đa ${limits.shifts} ca làm`, 'error');
-        return;
-      }
-      
-      const shiftData = {
-        code,
-        name,
-        startTime,
-        endTime
-      };
-      
-      const shiftRef = database.ref(`users/${currentUser.uid}/branches/${currentBranchCode}/shifts`).push();
-      shiftRef.set(shiftData)
-        .then(() => {
-          closeAddShiftModal();
-          showToast('Thêm ca làm thành công!', 'success');
-        })
-        .catch(error => {
-          console.error('Error saving shift:', error);
-          showToast('Có lỗi xảy ra: ' + error.message, 'error');
-        });
-    }
+  const code = document.getElementById('shift-code').value.trim();
+  const name = document.getElementById('shift-name').value.trim();
+  const startTime = document.getElementById('shift-start').value;
+  const endTime = document.getElementById('shift-end').value;
+  
+  if (!code || !name || !startTime || !endTime) {
+    showToast('Vui lòng điền đầy đủ thông tin', 'error');
+    return;
+  }
+  
+  if (startTime >= endTime) {
+    showToast('Giờ bắt đầu phải trước giờ kết thúc', 'error');
+    return;
+  }
+  
+  // Check shift limit
+  const limits = accountLimits[currentUserRole] || accountLimits['admin base'];
+  if (Object.keys(shifts).length >= limits.shifts) {
+    showToast(`Bạn đã đạt giới hạn tối đa ${limits.shifts} ca làm`, 'error');
+    return;
+  }
+  
+  // Kiểm tra trùng mã ca
+  const isCodeDuplicate = Object.values(shifts).some(shift => shift.code === code);
+  if (isCodeDuplicate) {
+    showToast('Mã ca đã tồn tại', 'error');
+    return;
+  }
+  
+  // Kiểm tra trùng tên ca
+  const isNameDuplicate = Object.values(shifts).some(shift => shift.name === name);
+  if (isNameDuplicate) {
+    showToast('Tên ca đã tồn tại', 'error');
+    return;
+  }
+  
+  const shiftData = {
+    code,
+    name,
+    startTime,
+    endTime
+  };
+  
+  const shiftRef = database.ref(`users/${currentUser.uid}/branches/${currentBranchCode}/shifts`).push();
+  shiftRef.set(shiftData)
+    .then(() => {
+      closeAddShiftModal();
+      showToast('Thêm ca làm thành công!', 'success');
+    })
+    .catch(error => {
+      console.error('Error saving shift:', error);
+      showToast('Có lỗi xảy ra: ' + error.message, 'error');
+    });
+}
     
     // Delete zone
     function deleteZone(zoneId) {
